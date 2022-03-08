@@ -55,7 +55,7 @@ jobs:
           context: . #当前文件夹
           file: ${{ env.TAG_NAME }}/Dockerfile #指定镜像dockerfile
           platforms: linux/amd64,linux/arm64 #镜像平台
-          tags: "includeno/{{ env.PRE_FIX_NAME$ }}${{ env.TAG_NAME }}:latest,includeno/{{ env.PRE_FIX_NAME$ }}${{ env.TAG_NAME }}:${{ env.RELEASE_VERSION }}"
+          tags: "includeno/{{ env.PRE_FIX_NAME }}${{ env.TAG_NAME }}:latest,includeno/{{ env.PRE_FIX_NAME$ }}${{ env.TAG_NAME }}:${{ env.RELEASE_VERSION }}"
           push: true
 
       - name: The job has succeeded
