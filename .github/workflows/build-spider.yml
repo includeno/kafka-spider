@@ -56,7 +56,7 @@ jobs:
           file: ${{ env.TAG_NAME }}/Dockerfile #指定镜像dockerfile
           platforms: linux/amd64 #镜像平台
           tags: "includeno/{{ env.PRE_FIX_NAME$ }}${{ env.TAG_NAME }}:latest,includeno/{{ env.PRE_FIX_NAME$ }}${{ env.TAG_NAME }}:${{ env.RELEASE_VERSION }}"
-            push: true
+          push: true
 
       - name: The job has succeeded
         if: ${{ success() }}
