@@ -34,14 +34,30 @@ public class SpiderResultListener {
             topics = KafkaTopic.spiderresult,
             containerFactory = "batchFactory",
             properties={
-                    "max.poll.interval.ms:60000",
-                    "max.poll.records:300"
+                    "max.poll.interval.ms:30000",
+                    "max.poll.records:100"
             }
     )
     public void batchListenSpiderResult(List<ConsumerRecord<String, String>> list){
         log.info("SpiderResultConsumer receive:" + list.size());
         List<String> messages=list.stream().map(a->a.value()).collect(Collectors.toList());
         log.warn("SpiderResultConsumer RAW:"+gson.toJson(messages));
+
+        for(String message:messages){
+            SpiderResultMessage spiderResultMessage = null;
+            try {
+                spiderResultMessage = gson.fromJson(message, SpiderResultMessage.class);
+                log.warn("spiderRecord:" + gson.toJson(spiderResultMessage));
+            } catch (Exception e) {
+                continue;
+            }
+            String url = spiderResultMessage.getUrl();
+            saveSpiderRecord(spiderResultMessage);
+
+            if (spiderResultMessage.getValid().equals(0)) {
+                log.warn("invalid url:" + url + " " + gson.toJson(spiderResultMessage));
+            }
+        }
 
     }
 
