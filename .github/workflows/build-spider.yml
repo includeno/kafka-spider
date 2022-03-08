@@ -9,8 +9,8 @@ on: # push operation is operate
 # CI enviroment settings ${{ env.RELEASE_VERSION }} ${{ env.TAG_NAME }}
 env:
   RELEASE_VERSION: "0.0.1" # version
-    TAG_NAME: "spider" #tag 只能小写开头
-    PRE_FIX_NAME: "kafka-spider-" #前缀
+  TAG_NAME: "spider" #tag 只能小写开头
+  PRE_FIX_NAME: "kafka-spider-" #前缀
 jobs:
   build:
     name: Build spider

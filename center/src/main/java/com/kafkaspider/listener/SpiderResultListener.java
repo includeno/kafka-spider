@@ -26,7 +26,6 @@ public class SpiderResultListener {
     @Autowired
     private KafkaTemplate kafkaTemplate;
 
-
     @Autowired
     private Gson gson;
 
