@@ -83,6 +83,7 @@ public class SpiderListener {
         }
         else{
             response.setCode(SpiderCode.SPIDER_COUNT_LIMIT.getCode());//因为爬虫服务数量已满
+            log.error("SPIDER_COUNT_LIMIT error " + url + " code" + SpiderCode.SPIDER_COUNT_LIMIT.getCode());
             throw new Exception(SpiderCode.SPIDER_COUNT_LIMIT.name());
         }
         log.info("crawl end:"+url+" "+(System.currentTimeMillis()-start));
