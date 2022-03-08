@@ -67,9 +67,9 @@ public class CommonPageService {
         String url = record.getUrl();
         List<Class> clazzs = MatchHelper.impls;
         //打印Class对象
-        for (Class cla : clazzs) {
-            log.info("实现类:" + cla.getClass());
-        }
+//        for (Class cla : clazzs) {
+//            log.info("实现类:" + cla.getClass());
+//        }
         for (Class c : clazzs) {
             WebDriver chrome = null;
             try {

@@ -20,10 +20,11 @@ ENV datasource_username='root'
 ENV datasource_password='root'
 
 ENV spider_count="4"
+ENV spider_partition_count="20"
 
 #add jar file
 ADD ${NAME}/target/${NAME}-${VERSION}.jar /app/application.jar
 
-CMD java -jar /app/application.jar --server.port=${server_port} --spider.count=${spider_count} \
+CMD java -jar /app/application.jar --server.port=${server_port} --spider.count=${spider_count} --spider.partition.count=${spider_partition_count} \
  --spring.kafka.bootstrap-servers=${kafka_server} \
  --spring.datasource.url="${datasource}" --spring.datasource.username=${datasource_username} --spring.datasource.password="${datasource_password}"

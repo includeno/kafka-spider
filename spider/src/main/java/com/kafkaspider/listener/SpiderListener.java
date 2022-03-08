@@ -14,11 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.concurrent.FailureCallback;
 import org.springframework.util.concurrent.SuccessCallback;
-
-import java.util.Date;
 
 @Slf4j
 @Configuration
@@ -78,12 +75,12 @@ public class SpiderListener {
             kafkaTemplate.send(KafkaTopic.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                 @Override
                 public void onSuccess(Object o) {
-                    log.info("SpiderResultMessage send success " + url);
+                    log.info("SpiderResultMessage send_success " + url);
                 }
             }, new FailureCallback() {
                 @Override
                 public void onFailure(Throwable throwable) {
-                    log.error("SpiderResultMessage send error " + url + " " + throwable.getMessage());
+                    log.error("SpiderResultMessage send_error " + url + " " + throwable.getMessage());
                 }
             });
             kafkaTemplate.flush();
