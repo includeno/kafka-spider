@@ -32,7 +32,14 @@ public class SpiderListener {
     @Autowired
     CommonPageService commonPageService;
 
-    @KafkaListener(id = "SpidertaskConsumer", topics = KafkaTopic.spidertask)
+    @KafkaListener(
+            id = "SpidertaskConsumer",
+            topics = KafkaTopic.spidertask,
+            properties={
+                    "max.poll.interval.ms:60000",
+                    "max.poll.records:3"
+            }
+    )
     public void spidertask(String message) throws Exception {
         log.info("spider receive:" + message);
         String url = message;
