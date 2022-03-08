@@ -1,4 +1,4 @@
-FROM includeno/jdk11chrome:openjdk-11.0.13-jdkchrome99.0.4844.51
+FROM includeno/jdk11chrome:openjdk-11.0.13-jdkchrome92.0.4515.43
 
 EXPOSE 8080
 
