@@ -35,7 +35,8 @@ public class SpiderResultListener {
             containerFactory = "batchFactory",
             properties={
                     "max.poll.interval.ms:30000",
-                    "max.poll.records:100"
+                    "max.poll.records:100",
+                    "max.partition.fetch.bytes:10MB"
             }
     )
     public void batchListenSpiderResult(List<ConsumerRecord<String, String>> list){
