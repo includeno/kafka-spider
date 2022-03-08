@@ -23,7 +23,7 @@ ENV spider_count="4"
 
 #add jar file
 ADD ${NAME}/target/${NAME}-${VERSION}.jar /app/application.jar
-#ENTRYPOINT ["java","-jar","/app/application.jar","--dockerconfig=true"]
+
 CMD java -jar /app/application.jar --server.port=${server_port} --spider.count=${spider_count} \
  --spring.kafka.bootstrap-servers=${kafka_server} \
  --spring.datasource.url="${datasource}" --spring.datasource.username=${datasource_username} --spring.datasource.password="${datasource_password}"
