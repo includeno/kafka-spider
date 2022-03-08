@@ -1,17 +1,14 @@
 package com.kafkaspider.listener;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.google.gson.Gson;
 
 import com.kafkaspider.config.KafkaTopic;
 import com.kafkaspider.config.SpiderLimit;
-import com.kafkaspider.entity.SpiderRecord;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
 import com.kafkaspider.message.SpiderResultMessage;
 import com.kafkaspider.response.SpiderResponse;
 import com.kafkaspider.service.CommonPageService;
-import com.kafkaspider.service.sql.SpiderRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +31,6 @@ public class SpiderListener {
 
     @Autowired
     CommonPageService commonPageService;
-
-    @Autowired
-    SpiderRecordService spiderRecordService;
 
     @KafkaListener(id = "SpidertaskConsumer", topics = KafkaTopic.spidertask)
     public void spidertask(String message) throws Exception {
@@ -94,44 +88,4 @@ public class SpiderListener {
         log.info("crawl end:"+url+" "+(System.currentTimeMillis()-start));
     }
 
-
-
-    public void saveSpiderRecordOld(UrlRecord res) {
-        Date date = new Date();
-        //保存当前url的爬虫记录
-        QueryWrapper<SpiderRecord> spiderQueryWrapper = new QueryWrapper();
-        spiderQueryWrapper.eq("url", res.getUrl());
-        SpiderRecord spiderRecord = spiderRecordService.getOne(spiderQueryWrapper);
-        if (spiderRecord == null) {
-            //无记录
-            spiderRecord = new SpiderRecord();
-            spiderRecord.setUrl(res.getUrl());
-
-            spiderRecord.setTag(res.getTag());
-            spiderRecord.setTitle(res.getTitle());
-            spiderRecord.setContent(res.getContent());
-            spiderRecord.setTime(res.getTime());
-
-            spiderRecord.setCreateTime(date);
-            spiderRecord.setUpdateTime(date);
-            spiderRecord.setValid(1);
-            if(res.getContent().length()==0||res.getTitle().length()==0){
-                spiderRecord.setValid(0);
-            }
-            boolean op = spiderRecordService.save(spiderRecord);
-            log.info("spiderRecordService.save: " + op);
-        } else {
-            spiderRecord.setTag(res.getTag());
-            spiderRecord.setContent(res.getContent());
-            spiderRecord.setTime(res.getTime());
-
-            spiderRecord.setUpdateTime(date);
-            spiderRecord.setValid(1);
-            if(res.getContent().length()==0||res.getTitle().length()==0){
-                spiderRecord.setValid(0);
-            }
-            boolean op = spiderRecordService.updateById(spiderRecord);
-            log.info("spiderRecordService.updateById: " + op);
-        }
-    }
 }
