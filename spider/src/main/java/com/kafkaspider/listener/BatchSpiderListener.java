@@ -35,7 +35,7 @@ public class BatchSpiderListener {
     @Autowired
     CommonPageService commonPageService;
 
-
+    //18446
     //https://strimzi.io/blog/2021/01/07/consumer-tuning/
     //max.poll.interval.ms 表示 consumer 每两次 poll 消息的时间间隔。简单地说，其实就是 consumer 每次消费消息的时长。如果消息处理的逻辑很重，那么市场就要相应延长。否则如果时间到了 consumer 还么消费完，broker 会默认认为 consumer 死了，发起 rebalance。
     //
@@ -63,7 +63,7 @@ public class BatchSpiderListener {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(times.get("max"),TimeUnit.SECONDS);
+            downLatch.await(times.get("max")>60L?60L:times.get("max"),TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
