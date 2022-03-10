@@ -39,7 +39,7 @@ public class SpiderListener {
             topics = KafkaTopic.spidertask,
             properties={
                     "max.poll.interval.ms:60000",
-                    "max.poll.records:3"
+                    "max.poll.records:1"
             }
     )
     public void spidertask(String message) throws Exception {
