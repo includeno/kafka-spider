@@ -106,16 +106,7 @@ public class WorldPeopleService implements ContentService, MatchService, CleanSe
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
-        WebElement time = wait.until(new ExpectedCondition<WebElement>() {
-            @Override
-            public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("channel"));
-            }
-        });
+        WebElement time = chrome.findElement(By.className("channel"));
         String ans = time.getText().replace("年","-").replace("月","-").replace("日"," ");
         log.info("time before:"+time.getText()+" "+"time after:"+ans);
 

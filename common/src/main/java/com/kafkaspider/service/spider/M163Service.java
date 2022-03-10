@@ -101,18 +101,9 @@ public class M163Service implements ContentService, MatchService, CleanService {
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
-        WebElement content = wait.until(new ExpectedCondition<WebElement>() {
-            @Override
-            public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("s-ptime"));
-            }
-        });
-        String ans = content.getText();
-        System.out.println("content.getText():"+content.getText());
+        WebElement time = chrome.findElement(By.className("s-ptime"));
+        String ans = time.getText();
+        log.info("time before:"+time.getText()+" "+"time after:"+ans);
 
         Date res = new Date();
         if (ans != null && !ans.equals("")) {

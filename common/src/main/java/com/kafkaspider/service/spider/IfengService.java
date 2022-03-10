@@ -97,16 +97,7 @@ public class IfengService implements ContentService, MatchService, CleanService 
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
-        WebElement time = wait.until(new ExpectedCondition<WebElement>() {
-            @Override
-            public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("time-1zG3fh78"));
-            }
-        });
+        WebElement time = chrome.findElement(By.className("time-1zG3fh78"));
         String ans = time.getText().replace("年","-").replace("月","-").replace("日","");
         log.info("time before:"+time.getText()+" "+"time after:"+ans);
 

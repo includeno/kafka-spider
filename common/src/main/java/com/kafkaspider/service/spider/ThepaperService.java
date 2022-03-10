@@ -99,16 +99,7 @@ public class ThepaperService implements ContentService, MatchService, CleanServi
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
-        WebElement time = wait.until(new ExpectedCondition<WebElement>() {
-            @Override
-            public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("news_about"));
-            }
-        });
+        WebElement time = chrome.findElement(By.className("news_about"));
         String ans = time.getText();
         log.info("time before:"+time.getText()+" "+"time after:"+ans);
 
