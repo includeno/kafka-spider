@@ -1,16 +1,23 @@
 package com.kafkaspider.controller;
 
 import com.google.gson.Gson;
+import com.kafkaspider.config.SeleniumConfig;
 import com.kafkaspider.config.SpiderLimit;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
 import com.kafkaspider.response.SpiderResponse;
 import com.kafkaspider.service.CommonPageService;
+import com.kafkaspider.worker.SpiderWorker;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.*;
 
 
 @Slf4j
@@ -51,4 +58,46 @@ public class CommonPageController {
         log.info("crawl end:"+url+" "+(System.currentTimeMillis()-start));
         return response;
     }
+
+    //读取网页的主要内容
+    @PostMapping("/factory")
+    public void factory(@RequestParam("list") List<String> list) {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 20, 2, TimeUnit.SECONDS, new ArrayBlockingQueue<>(5));
+        CountDownLatch downLatch=new CountDownLatch(list.size());
+        try {
+            for(String url:list){
+                executor.submit(new SpiderWorker(downLatch,url,commonPageService,log));
+            }
+            downLatch.await(30,TimeUnit.SECONDS);
+        }
+        catch (Exception e){
+            log.error("executor error");
+        }
+        finally {
+            executor.shutdown();
+        }
+
+    }
+
+    public Callable<UrlRecord> getTask(String url){
+        Callable<UrlRecord> callable = () -> {
+            UrlRecord record=new UrlRecord();
+            record.setUrl(url);
+            try {
+                log.info("commonPageService crawl begin:"+gson.toJson(record));
+                record=commonPageService.crawl(record);
+                log.info("commonPageService crawl end:"+gson.toJson(record));
+            }
+            catch (Exception e){
+                log.error("factoryTask error!");
+            }
+            finally {
+
+            }
+            return record;
+        };
+        return callable;
+    }
+
+
 }

@@ -17,7 +17,7 @@ import java.util.TimeZone;
 public class LocalSpiderMain {
 
     public static void main(String[] args) {
-        log.info("spider args:"+ Arrays.toString(args));
+        System.out.println("spider args:"+ Arrays.toString(args));
 
         //chromedriver http://npm.taobao.org/mirrors/chromedriver/
         if(SystemConfig.isLinux()){

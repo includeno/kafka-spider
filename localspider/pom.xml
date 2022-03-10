@@ -69,7 +69,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.12</version>
         </dependency>
 
         <dependency>
@@ -144,7 +144,6 @@
                 <version>2.3.12.RELEASE</version>
                 <configuration>
                     <mainClass>com.kafkaspider.LocalSpiderMain</mainClass>
-
                 </configuration>
                 <executions>
                     <execution>
