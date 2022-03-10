@@ -38,7 +38,7 @@ public class SouhucomService implements ContentService, MatchService, CleanServi
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(false);
+        WebDriver chrome = SeleniumConfig.getWebDriver(true);
         return chrome;
     }
 
@@ -63,6 +63,14 @@ public class SouhucomService implements ContentService, MatchService, CleanServi
 
     @Override
     public String getMainContent(WebDriver chrome, String url) {
+        //show-all
+        try {
+            WebElement showMore = chrome.findElement(By.id("showMore"));
+            showMore.click();
+        }
+        catch (Exception e){
+            log.warn("no showMore");
+        }
         WebElement content = chrome.findElement(By.id("mp-editor"));
         String ans = "";
         if (content == null) {
