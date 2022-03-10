@@ -85,31 +85,35 @@ public class CommonPageService {
 
                     chrome.get(url);
 
-                    Method wait = c.getMethod("wait", new Class[]{WebDriver.class, String.class});
-                    wait.invoke(service, chrome, url);
+                    try {
+                        Method wait = c.getMethod("wait", new Class[]{WebDriver.class, String.class});
+                        wait.invoke(service, chrome, url);
 
-                    Method getTitle = c.getMethod("getTitle", new Class[]{WebDriver.class, String.class});
-                    String title = (String) getTitle.invoke(service, chrome, url);
-                    record.setTitle(title);
+                        Method getTitle = c.getMethod("getTitle", new Class[]{WebDriver.class, String.class});
+                        String title = (String) getTitle.invoke(service, chrome, url);
+                        record.setTitle(title);
 
-                    Method getTag = c.getMethod("getTag", new Class[]{WebDriver.class, String.class});
-                    String tag = (String) getTag.invoke(service, chrome, url);
-                    record.setTag(tag);
+                        Method getTag = c.getMethod("getTag", new Class[]{WebDriver.class, String.class});
+                        String tag = (String) getTag.invoke(service, chrome, url);
+                        record.setTag(tag);
 
-                    Method getTime = c.getMethod("getTime", new Class[]{WebDriver.class, String.class});
-                    Date time = (Date) getTime.invoke(service, chrome, url);
-                    record.setTime(time);
+                        Method getTime = c.getMethod("getTime", new Class[]{WebDriver.class, String.class});
+                        Date time = (Date) getTime.invoke(service, chrome, url);
+                        record.setTime(time);
 
-                    Method getMainContent = c.getMethod("getMainContent", new Class[]{WebDriver.class, String.class});
-                    String content = (String) getMainContent.invoke(service, chrome, url);
-                    record.setContent(content);
+                        Method getMainContent = c.getMethod("getMainContent", new Class[]{WebDriver.class, String.class});
+                        String content = (String) getMainContent.invoke(service, chrome, url);
+                        record.setContent(content);
 
-                    Method getView = c.getMethod("getView", new Class[]{WebDriver.class, String.class});
-                    Integer view = (Integer) getView.invoke(service, chrome, url);
-                    record.setView(view);
+                        Method getView = c.getMethod("getView", new Class[]{WebDriver.class, String.class});
+                        Integer view = (Integer) getView.invoke(service, chrome, url);
+                        record.setView(view);
 
-                    log.warn("record: len+" +record.getContent().length()+" time"+record.getTime());
-                    break;//在找到匹配的爬虫之后跳出循环节省时间
+                        log.warn("record: len+" +record.getContent().length()+" time"+record.getTime());
+                    }
+                    finally {
+                        break;//在找到匹配的爬虫之后跳出循环节省时间
+                    }
                 }
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();

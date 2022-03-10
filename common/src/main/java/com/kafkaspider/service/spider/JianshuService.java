@@ -41,6 +41,11 @@ public class JianshuService implements ContentService, MatchService, CleanServic
 
     @Override
     public void wait(WebDriver chrome, String url) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
@@ -110,13 +115,20 @@ public class JianshuService implements ContentService, MatchService, CleanServic
     public Date getTime(WebDriver chrome, String url) {
         //2021.11.19 17:08:03
         //tag time
-        WebElement content = chrome.findElement(By.tagName("time"));
-        String ans = content.getText();
+        WebElement content=null;
         Date res = new Date();
-        if (ans != null && !ans.equals("")) {
-            res = GlobalDateUtil.convertFull_3(ans);
+        try {
+            content = chrome.findElement(By.tagName("time"));
+            String ans = content.getText();
+            if (ans != null && !ans.equals("")) {
+                res = GlobalDateUtil.convertFull_3(ans);
+                log.info("getTime completed:" + res.toString());
+            }
         }
-        log.info("getTime completed:" + res.toString());
+        catch (Exception e){
+            res=null;
+            log.info("getTime error: null");
+        }
         return res;
     }
 
