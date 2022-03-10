@@ -39,9 +39,9 @@ public class SpiderListener {
             topics = KafkaTopic.spidertask,
             properties={
                     "fetch.max.wait.ms:800",
-                    "max.poll.interval.ms:60000",
+                    "max.poll.interval.ms:300000",
                     "max.poll.records:1",
-                    "auto.commit.interval.ms:1000"
+                    "auto.commit.interval.ms:100"
             }
     )
     public void spidertask(String message) throws Exception {
