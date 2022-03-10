@@ -49,7 +49,7 @@ public class SinacomService implements ContentService, MatchService, CleanServic
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
@@ -103,7 +103,7 @@ public class SinacomService implements ContentService, MatchService, CleanServic
         JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
         javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement time = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {

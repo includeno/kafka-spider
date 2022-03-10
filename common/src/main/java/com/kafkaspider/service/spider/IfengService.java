@@ -48,16 +48,14 @@ public class IfengService implements ContentService, MatchService, CleanService 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("main_content-3N5v8C0v"));
+                return text.findElement(By.className("body"));
             }
         });
         log.info("wait article completed");
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
     }
 
     @Override
@@ -102,7 +100,7 @@ public class IfengService implements ContentService, MatchService, CleanService 
         JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
         javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
 
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement time = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {

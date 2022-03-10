@@ -44,7 +44,7 @@ public class IteyeService implements ContentService, MatchService, CleanService 
 
     @Override
     public void wait(WebDriver chrome, String url) {
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {

@@ -43,7 +43,7 @@ public class CsdnService implements ContentService, MatchService, CleanService {
 
     @Override
     public void wait(WebDriver chrome, String url) {
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
@@ -156,7 +156,7 @@ public class CsdnService implements ContentService, MatchService, CleanService {
         }
 
         //class time
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 10);
+        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement content = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
