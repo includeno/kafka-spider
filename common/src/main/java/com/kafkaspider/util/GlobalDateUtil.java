@@ -14,13 +14,21 @@ public class GlobalDateUtil {
     //转换格式 2018-08-15 18:18
     //适用网站 博客园
     public static Date convert2(String input) {
-        log.info("convert from:"+input);
+        String patternFormat = "((19|20)[0-9]{2})-(0?[1-9]|1[012])-(0?[1-9]|[12][0-9]|3[01]) "
+                + "([01]?[0-9]|2[0-3]):[0-5][0-9]";
+        Pattern pattern = Pattern.compile(patternFormat);
+        Matcher matcher = pattern.matcher(input);
+        String group=input;
+        if(matcher.find()){
+            group=matcher.group(0);
+        }
+        log.info("convert from convert2:"+group);
         SimpleDateFormat format = new SimpleDateFormat("yy-MM-dd hh:mm");
         Date ans= null;
         try {
-            ans = format.parse(input);
+            ans = format.parse(group);
         } catch (ParseException e) {
-            e.printStackTrace();
+            ans=null;
         }
         finally {
 
@@ -122,7 +130,6 @@ public class GlobalDateUtil {
             ans = format.parse(group);
         } catch (ParseException e) {
             ans=null;
-            e.printStackTrace();
         }
         finally {
 

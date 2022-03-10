@@ -88,6 +88,9 @@ public class CnblogsService implements ContentService, MatchService, CleanServic
     public Date getTime(WebDriver chrome, String url) {
         //class time
         WebElement content = chrome.findElement(By.id("post-date"));
+        if(content==null){
+            return null;
+        }
         String ans = content.getText();
         Date res = new Date();
         if (ans != null && !ans.equals("")) {
