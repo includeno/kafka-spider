@@ -36,7 +36,7 @@ public class TencentNewsService implements ContentService, MatchService, CleanSe
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(true);
+        WebDriver chrome = SeleniumConfig.getWebDriver(false);
         return chrome;
     }
 

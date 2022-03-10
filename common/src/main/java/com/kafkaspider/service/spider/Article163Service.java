@@ -37,7 +37,7 @@ public class Article163Service implements ContentService, MatchService, CleanSer
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(true);
+        WebDriver chrome = SeleniumConfig.getWebDriver(false);
         return chrome;
     }
 

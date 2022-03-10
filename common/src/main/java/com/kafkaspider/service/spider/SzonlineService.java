@@ -37,7 +37,7 @@ public class SzonlineService implements ContentService, MatchService, CleanServi
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(true);
+        WebDriver chrome = SeleniumConfig.getWebDriver(false);
         return chrome;
     }
 
