@@ -63,6 +63,9 @@ public class SpiderListener {
             try {
                 record=commonPageService.crawl(record);
             }
+            catch (Exception e){
+                log.error("commonPageService.crawl error");
+            }
             finally {
                 SpiderLimit.spiders.remove(url);
             }
