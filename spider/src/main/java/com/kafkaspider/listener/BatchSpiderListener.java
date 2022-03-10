@@ -63,7 +63,7 @@ public class BatchSpiderListener {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(times.get("max")>60L?60L:times.get("max"),TimeUnit.SECONDS);
+            downLatch.await(times.get("max")>90L?90L:times.get("max"),TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
@@ -143,8 +143,9 @@ public class BatchSpiderListener {
             Long exp=(System.currentTimeMillis()-start);
             times.put("sum", times.getOrDefault("sum",0L)+exp);
             times.put("count",times.getOrDefault("count",0L)+1L);
+            times.put("avg",times.get("sum")/times.get("count"));
             times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-            log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("sum")/times.get("count")+" count:"+times.get("count")+" max:"+times.get("max"));
+            log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
         };
         return runnable;
     }
