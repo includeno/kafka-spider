@@ -14,7 +14,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @MapperScan("com.kafkaspider.mapper")
 @Slf4j
-public class SpiderMain {
+public class LocalSpiderMain {
 
     public static void main(String[] args) {
         log.info("spider args:"+ Arrays.toString(args));
@@ -30,7 +30,7 @@ public class SpiderMain {
             System.setProperty("webdriver.chrome.driver", "private/chromedriver");//mac
         }
 
-        SpringApplication.run(SpiderMain.class, args);
+        SpringApplication.run(LocalSpiderMain.class, args);
     }
 
     @PostConstruct

@@ -45,7 +45,8 @@ public class SpiderListener {
                     "fetch.max.wait.ms:700",
                     "max.poll.interval.ms:300000",
                     "max.poll.records:3",
-                    "auto.commit.interval.ms:100"
+                    "auto.commit.interval.ms:100",
+                    "session.timeout.ms:30000"
             }
     )
     public void spidertask(String message) throws Exception {
