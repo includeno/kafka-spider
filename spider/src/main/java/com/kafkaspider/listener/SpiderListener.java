@@ -33,6 +33,7 @@ public class SpiderListener {
 
     @Autowired
     CommonPageService commonPageService;
+    //https://strimzi.io/blog/2021/01/07/consumer-tuning/
     //max.poll.interval.ms 表示 consumer 每两次 poll 消息的时间间隔。简单地说，其实就是 consumer 每次消费消息的时长。如果消息处理的逻辑很重，那么市场就要相应延长。否则如果时间到了 consumer 还么消费完，broker 会默认认为 consumer 死了，发起 rebalance。
     //
     //max.poll.records 表示每次消费的时候，获取多少条消息。获取的消息条数越多，需要处理的时间越长。所以每次拉取的消息数不能太多，需要保证在 max.poll.interval.ms 设置的时间内能消费完，否则会发生 rebalance。
@@ -43,7 +44,7 @@ public class SpiderListener {
             properties={
                     "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:300000",
-                    "max.poll.records:10",
+                    "max.poll.records:3",
                     "auto.commit.interval.ms:100"
             }
     )
