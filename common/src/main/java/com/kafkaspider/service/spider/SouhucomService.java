@@ -57,12 +57,13 @@ public class SouhucomService implements ContentService, MatchService, CleanServi
             }
         });
         log.info("wait article completed");
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+
     }
 
     @Override
     public String getMainContent(WebDriver chrome, String url) {
+        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
+        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
         //show-all
         try {
             WebElement showMore = chrome.findElement(By.id("showMore"));
@@ -113,13 +114,18 @@ public class SouhucomService implements ContentService, MatchService, CleanServi
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         WebElement time = chrome.findElement(By.id("news-time"));
         String ans = time.getText();
         log.info("time before:"+time.getText()+" "+"time after:"+ans);
 
         Date res = new Date();
         if (ans != null && !ans.equals("")) {
-            res = GlobalDateUtil.convert3(ans);
+            res = GlobalDateUtil.convert2(ans);
         }
         log.info("getTime completed:" + res);
         return res;
