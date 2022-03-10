@@ -111,6 +111,9 @@ public class CommonPageService {
 
                         log.warn("record: len+" +record.getContent().length()+" time"+record.getTime());
                     }
+                    catch (Exception e){
+                        log.error("record error");
+                    }
                     finally {
                         break;//在找到匹配的爬虫之后跳出循环节省时间
                     }

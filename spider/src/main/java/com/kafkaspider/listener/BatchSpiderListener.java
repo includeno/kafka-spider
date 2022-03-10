@@ -54,13 +54,16 @@ public class BatchSpiderListener {
             }
     )
     public void batchSpiderTask(List<String> messages){
+        if(times.get("max")==null){
+            times.put("max",30L);
+        }
         ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 20, 2, TimeUnit.SECONDS, new ArrayBlockingQueue<>(5));
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(30,TimeUnit.SECONDS);
+            downLatch.await(times.get("max"),TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
@@ -88,9 +91,21 @@ public class BatchSpiderListener {
             }
             catch (Exception e){
                 log.error("commonPageService.crawl error");
+                //遇到错误，重新发送任务
+                kafkaTemplate.send(KafkaTopic.spidertask, url).addCallback(new SuccessCallback() {
+                    @Override
+                    public void onSuccess(Object o) {
+                        log.info("spidertask send success "+url);
+                    }
+                }, new FailureCallback() {
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        log.error("spidertask send error "+url+" "+throwable.getMessage());
+                    }
+                });
             }
             finally {
-                SpiderLimit.spiders.remove(url);
+
             }
             String simhash="";
             if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
