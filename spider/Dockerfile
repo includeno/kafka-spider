@@ -19,7 +19,7 @@ ENV datasource='jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncodi
 ENV datasource_username='root'
 ENV datasource_password='root'
 
-ENV spider_count="4"
+ENV spider_count="6"
 ENV spider_partition_count="20"
 
 #add jar file

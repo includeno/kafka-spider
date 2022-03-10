@@ -54,9 +54,12 @@ public class SpiderListener {
         record.setUrl(url);
         if (SpiderLimit.spiders.size()<SpiderLimit.countOfSpider&&!SpiderLimit.spiders.contains(url)) {
             SpiderLimit.spiders.add(url);
-            record=commonPageService.crawl(record);
-            SpiderLimit.spiders.remove(url);
-
+            try {
+                record=commonPageService.crawl(record);
+            }
+            finally {
+                SpiderLimit.spiders.remove(url);
+            }
             String simhash="";
             if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
                 response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
