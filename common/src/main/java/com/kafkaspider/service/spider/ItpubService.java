@@ -116,6 +116,6 @@ public class ItpubService implements MatchService, ContentService, CleanService 
 
     @Override
     public String cleanUrl(String url) {
-        return null;
+        return url;
     }
 }

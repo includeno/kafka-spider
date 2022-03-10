@@ -141,8 +141,9 @@ public class JianshuService implements ContentService, MatchService, CleanServic
         }
         return view;
     }
+
     @Override
     public String cleanUrl(String url) {
-        return null;
+        return url;
     }
 }

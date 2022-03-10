@@ -17,9 +17,14 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.util.concurrent.FailureCallback;
 import org.springframework.util.concurrent.SuccessCallback;
 
+import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @Configuration
 public class SpiderListener {
+    static ConcurrentHashMap<String,Long> times=new ConcurrentHashMap<>();
+
     @Autowired
     Gson gson;
 
@@ -42,7 +47,6 @@ public class SpiderListener {
         String url = message;
 
         long start=System.currentTimeMillis();
-        log.info("crawl begin:"+url+" "+start);
         SpiderResponse response=new SpiderResponse();
         UrlRecord record = new UrlRecord();
         record.setUrl(url);
@@ -52,7 +56,6 @@ public class SpiderListener {
             SpiderLimit.spiders.remove(url);
 
             String simhash="";
-
             if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
                 response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
                 response.setRecord(record);
@@ -90,7 +93,11 @@ public class SpiderListener {
             log.error("SPIDER_COUNT_LIMIT error " + url + " code" + SpiderCode.SPIDER_COUNT_LIMIT.getCode());
             throw new Exception(SpiderCode.SPIDER_COUNT_LIMIT.name());
         }
-        log.info("crawl end:"+url+" "+(System.currentTimeMillis()-start));
+
+        Long exp=(System.currentTimeMillis()-start);
+        times.put("sum", times.getOrDefault("sum",0L)+exp);
+        times.put("count",times.getOrDefault("count",0L)+1L);
+        log.info("STAT current:"+exp+" avg:"+times.get("sum")/times.get("count")+" total:"+times.get("sum"));
     }
 
 }

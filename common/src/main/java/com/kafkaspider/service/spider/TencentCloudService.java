@@ -180,6 +180,6 @@ public class TencentCloudService implements MatchService, ContentService, CleanS
 
     @Override
     public String cleanUrl(String url) {
-        return null;
+        return url;
     }
 }

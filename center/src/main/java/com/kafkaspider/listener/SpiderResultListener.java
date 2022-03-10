@@ -36,9 +36,9 @@ public class SpiderResultListener {
             properties={
                     "max.poll.interval.ms:30000",
                     "max.poll.records:100",
-                    "max.partition.fetch.bytes:10000000"
+                    "max.partition.fetch.bytes:10485760"//max.partition.fetch.bytes 1048576 =1MB
             }
-    )//max.partition.fetch.bytes 1000000 =1MB
+    )
     public void batchListenSpiderResult(List<ConsumerRecord<String, String>> list){
         log.info("SpiderResultConsumer receive:" + list.size());
         List<String> messages=list.stream().map(a->a.value()).collect(Collectors.toList());

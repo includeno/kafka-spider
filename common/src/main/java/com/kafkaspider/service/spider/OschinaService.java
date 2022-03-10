@@ -146,6 +146,6 @@ public class OschinaService implements ContentService, MatchService, CleanServic
 
     @Override
     public String cleanUrl(String url) {
-        return null;
+        return url;
     }
 }

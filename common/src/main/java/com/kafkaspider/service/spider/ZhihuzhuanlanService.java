@@ -149,7 +149,7 @@ public class ZhihuzhuanlanService implements ContentService, MatchService, Clean
 
     @Override
     public String cleanUrl(String url) {
-        return null;
+        return url;
     }
 }
 
