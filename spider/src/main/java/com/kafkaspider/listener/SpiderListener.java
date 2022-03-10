@@ -44,7 +44,7 @@ public class SpiderListener {
             properties={
                     "fetch.max.wait.ms:400",
                     "max.poll.interval.ms:300000",
-                    "max.poll.records:5",
+                    "max.poll.records:8",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:60000"
             }
@@ -112,7 +112,7 @@ public class SpiderListener {
         times.put("sum", times.getOrDefault("sum",0L)+exp);
         times.put("count",times.getOrDefault("count",0L)+1L);
         times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-        log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("sum")/times.get("count")+" total:"+times.get("sum")+" max:"+times.get("max"));
+        log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("sum")/times.get("count")+" count:"+times.get("count")+" max:"+times.get("max"));
     }
 
 }
