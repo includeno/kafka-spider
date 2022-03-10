@@ -39,7 +39,7 @@ public class SpiderListener {
             topics = KafkaTopic.spidertask,
             properties={
                     "fetch.max.wait.ms:400",
-                    "max.poll.interval.ms:300000",
+                    "max.poll.interval.ms:30000",
                     "max.poll.records:3",
                     "auto.commit.interval.ms:100"
             }
