@@ -40,7 +40,7 @@ public class SpiderListener {
             properties={
                     "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:300000",
-                    "max.poll.records:5",
+                    "max.poll.records:8",
                     "auto.commit.interval.ms:100"
             }
     )
@@ -54,6 +54,7 @@ public class SpiderListener {
         record.setUrl(url);
         if (SpiderLimit.spiders.size()<SpiderLimit.countOfSpider&&!SpiderLimit.spiders.contains(url)) {
             SpiderLimit.spiders.add(url);
+            log.info("SpiderLimit.spiders:"+SpiderLimit.spiders.size());
             try {
                 record=commonPageService.crawl(record);
             }
