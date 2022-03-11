@@ -4,6 +4,7 @@ public class KafkaTopicString {
 
     //spider
     public static final String spidertask ="spidertask-20220311";//spidertask
+    public static final String spidertask_slow ="spidertask-slow-20220311";//spidertask-slow
     public static final String spiderresult="spiderresult-20220311";//spiderresult
 
     //Spark监听

@@ -1,15 +1,12 @@
 package com.kafkaspider.listener;
 
 import com.google.gson.Gson;
-import com.kafkaspider.config.KafkaTopic;
 import com.kafkaspider.config.KafkaTopicString;
-import com.kafkaspider.config.SpiderLimit;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
 import com.kafkaspider.message.SpiderResultMessage;
 import com.kafkaspider.response.SpiderResponse;
 import com.kafkaspider.service.CommonPageService;
-import com.kafkaspider.worker.SpiderWorker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +20,7 @@ import java.util.concurrent.*;
 
 @Slf4j
 @Configuration
-public class BatchSpiderListener {
+public class BatchSlowSpiderListener {
     static ConcurrentHashMap<String,Long> times=new ConcurrentHashMap<>();
     static ConcurrentHashMap<String,Integer> back=new ConcurrentHashMap<>();
 
@@ -43,32 +40,33 @@ public class BatchSpiderListener {
     //max.poll.records 表示每次消费的时候，获取多少条消息。获取的消息条数越多，需要处理的时间越长。所以每次拉取的消息数不能太多，需要保证在 max.poll.interval.ms 设置的时间内能消费完，否则会发生 rebalance。
 
     @KafkaListener(
-            id = "SpidertaskConsumer",
+            id = "SlowSpidertaskConsumer",
             topics = KafkaTopicString.spidertask,
             containerFactory = "batchFactory",
             properties={
                     "fetch.max.wait.ms:500",
-                    "max.poll.interval.ms:180000",
-                    "max.poll.records:16",
+                    "max.poll.interval.ms:300000",
+                    "max.poll.records:4",
                     "auto.commit.interval.ms:100",
-                    "session.timeout.ms:60000"
+                    "session.timeout.ms:120000"
             }
     )
     public void batchSpiderTask(List<String> messages){
         log.info("batchSpiderTask receive "+messages.size());
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 4, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(120,TimeUnit.SECONDS);
+            downLatch.await(240,TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
             //备份
         }
         finally {
+            kafkaTemplate.flush();
             executor.shutdownNow();
             try {
                 Thread.sleep(5000);
@@ -76,16 +74,22 @@ public class BatchSpiderListener {
                 e.printStackTrace();
             }
             for(String url: back.keySet()){
-                kafkaTemplate.send(KafkaTopicString.spidertask_slow, url).addCallback(new SuccessCallback() {
+                log.error("未处理完成:"+url);
+                SpiderResultMessage spiderResultMessage = new SpiderResultMessage();
+                spiderResultMessage.setMessage("无法爬取");
+                spiderResultMessage.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
+                spiderResultMessage.setSimhash("");
+                //步骤6 任务添加至sparktask队列
+                kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                     @Override
                     public void onSuccess(Object o) {
-                        log.info("SPIDER_SLOW send_success " + url);
+                        log.info("SPIDER_UNREACHABLE send_success " + url);
                         back.put(url,null);
                     }
                 }, new FailureCallback() {
                     @Override
                     public void onFailure(Throwable throwable) {
-                        log.error("SPIDER_SLOW send_error " + url + " " + throwable.getMessage());
+                        log.error("SPIDER_UNREACHABLE send_error " + url + " " + throwable.getMessage());
                     }
                 });
                 kafkaTemplate.flush();
@@ -111,17 +115,6 @@ public class BatchSpiderListener {
             catch (Exception e){
                 log.error("commonPageService.crawl error");
                 //遇到错误，重新发送任务
-                kafkaTemplate.send(KafkaTopicString.spidertask_slow, url).addCallback(new SuccessCallback() {
-                    @Override
-                    public void onSuccess(Object o) {
-                        log.info("spider_slow send success "+url);
-                    }
-                }, new FailureCallback() {
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        log.error("spider_slow send error "+url+" "+throwable.getMessage());
-                    }
-                });
             }
             finally {
                 String simhash="";

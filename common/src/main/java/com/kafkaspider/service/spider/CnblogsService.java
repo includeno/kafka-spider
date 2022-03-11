@@ -43,6 +43,11 @@ public class CnblogsService implements ContentService, MatchService, CleanServic
 
     @Override
     public void wait(WebDriver chrome, String url) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
