@@ -23,6 +23,14 @@ public class KafkaTopic {
     }
 
     @Bean
+    public NewTopic spidertask_slow() {
+        return TopicBuilder.name(KafkaTopicString.spidertask_slow)
+                .partitions(count)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
     public NewTopic spiderresult() {
         return TopicBuilder.name(KafkaTopicString.spiderresult)
                 .partitions(count)
