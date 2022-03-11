@@ -3,8 +3,8 @@ package com.kafkaspider.config;
 public class KafkaTopicString {
 
     //spider
-    public static final String spidertask ="spidertask20220311";//spidertask
-    public static final String spiderresult="spiderresult20220311";//spiderresult
+    public static final String spidertask ="spidertask-20220311";//spidertask
+    public static final String spiderresult="spiderresult-20220311";//spiderresult
 
     //Spark监听
 
