@@ -20,6 +20,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SuccessCallback;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.*;
@@ -63,27 +64,33 @@ public class BatchSpiderListener {
         HashSet<String> set=new HashSet<>();
         set.addAll(messages);
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
+        log.info("batchSpiderTask after filter "+messages.size());
+        log.info("batchSpiderTask after filter list:"+ Arrays.toString(list.toArray()));
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         List<Callable<UrlRecord>> tasks=new ArrayList<>();
         List<Future<UrlRecord>> futures=new ArrayList<>();
         for(String url:list){
-            if(url.equals("")){
+            if(url.replace(" ","").equals("")){
+                log.warn("skip blank");
                 continue;
             }
+            log.info("add task:"+url);
             Callable<UrlRecord> task = getTask(downLatch, url);
             tasks.add(task);
             Future<UrlRecord> future=executor.submit(task);
             futures.add(future);
             back.putIfAbsent(future,url);
         }
+        log.info("executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
 
         boolean downLatcherror=false;
         try {
             long start=System.currentTimeMillis();
             //等待全部处理完成
             downLatch.await(120,TimeUnit.SECONDS);
+            log.warn("downLatch completed!");
 
             //获取全部处理结果
             List<UrlRecord> records=new ArrayList<>();
@@ -91,25 +98,12 @@ public class BatchSpiderListener {
                 records.add(future.get());
             }
             for(UrlRecord record:records){
-                SpiderResponse response=new SpiderResponse();
-                String simhash="";
-                if(record!=null&&(record.getTitle()==null||record.getContent()==null||record.getTime()==null)){
-                    response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
-                    response.setRecord(record);
-                }
-                else if(record!=null&&record.getTitle().length()>0&&record.getContent().length()>0){
-                    response.setCode(SpiderCode.SUCCESS.getCode());
-                    response.setRecord(record);
-                }
-                else {
-                    response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
-                    response.setRecord(record);
-                }
-                String url= record.getUrl();
+                log.info("record url after downLatch:"+record.getUrl());
+                SpiderResponse response = normal(record);
 
                 if(response.getCode().equals(SpiderCode.SPIDER_UNREACHABLE.getCode())){
                     //遇到错误，重新发送任务
-                    ListenableFuture task = kafkaTemplate.send(KafkaTopicString.spidertask_slow, url);
+                    ListenableFuture task = kafkaTemplate.send(KafkaTopicString.spidertask_slow, record.getUrl());
                     try {
                         task.get();
                     } catch (InterruptedException e) {
@@ -128,31 +122,24 @@ public class BatchSpiderListener {
                 times.put("count",times.getOrDefault("count",0L)+1L);
                 times.put("avg",times.get("sum")/times.get("count"));
                 times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-                log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
+                log.info("url:"+record.getUrl()+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
             }
         } catch (InterruptedException e) {
             downLatcherror=true;
-            log.error("downLatcherror");
+            log.error("downLatch error!");
             for(Future<UrlRecord> future:futures) {
                 if (!future.isDone()) {
                     String url=back.get(future);
-                    kafkaTemplate.send(KafkaTopicString.spidertask_slow, url).addCallback(new SuccessCallback() {
-                        @Override
-                        public void onSuccess(Object o) {
-                            log.info("SPIDER_UNREACHABLE send_success " + url);
-                        }
-                    }, new FailureCallback() {
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            log.error("SPIDER_UNREACHABLE send_error " + url + " " + throwable.getMessage());
-                        }
-                    });
-                    kafkaTemplate.flush();
+
+                    UrlRecord record=new UrlRecord();
+                    record.setUrl(url);
+                    log.info("record url when downLatcherror:"+record.getUrl());
+                    resolveError(record);//非正常结束
                 }
                 else{
                     UrlRecord record = future.get();
-
-                    resolveNormal(record);
+                    log.info("record url when downLatcherror future.get():"+record.getUrl());
+                    resolveNormal(record);//正常结束
                 }
             }
         }
@@ -177,8 +164,6 @@ public class BatchSpiderListener {
             response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
             response.setRecord(record);
         }
-        String url= record.getUrl();
-        //正常处理
 
         return response;
     }
@@ -192,12 +177,27 @@ public class BatchSpiderListener {
         ListenableFuture task= kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage));
         try {
             task.get();
-            log.info("SpiderResultMessage send_success " + record.getUrl());
+            log.info("SpiderResultMessage success " + record.getUrl());
         } catch (InterruptedException e1) {
             log.error("InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e1.getMessage());
         } catch (ExecutionException e2) {
             log.error("InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e2.getMessage());
         }
+    }
+
+    public void resolveError(UrlRecord record){
+        kafkaTemplate.send(KafkaTopicString.spidertask_slow, record.getUrl()).addCallback(new SuccessCallback() {
+            @Override
+            public void onSuccess(Object o) {
+                log.info("SPIDER_UNREACHABLE send_success " + record.getUrl());
+            }
+        }, new FailureCallback() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                log.error("SPIDER_UNREACHABLE send_error " + record.getUrl() + " " + throwable.getMessage());
+            }
+        });
+        kafkaTemplate.flush();
     }
 
     public Callable<UrlRecord> getTask(CountDownLatch countDownLatch,String message) {
@@ -208,14 +208,17 @@ public class BatchSpiderListener {
             record.setUrl(url);
             boolean error=false;
             try {
+                log.info("before crawl "+url);
                 record=commonPageService.crawl(record);
+                log.info("after crawl "+url);
             }
             catch (Exception e){
-                log.error("commonPageService.crawl error");
+                log.error("commonPageService.crawl error"+url);
                 error=true;
             }
             finally {
                 countDownLatch.countDown();
+                log.info("return crawl:"+url);
                 return record;
             }
         };
