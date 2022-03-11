@@ -38,8 +38,8 @@ public class BatchSlowSpiderListener {
             topics = KafkaTopicString.spidertask_slow,
             containerFactory = "batchFactory",
             properties={
-                    "fetch.max.wait.ms:500",
-                    "max.poll.interval.ms:300000",
+                    "fetch.max.wait.ms:1000",
+                    "max.poll.interval.ms:360000",
                     "max.poll.records:4",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:120000"
@@ -65,11 +65,6 @@ public class BatchSlowSpiderListener {
         finally {
             kafkaTemplate.flush();
             executor.shutdownNow();
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             log.info("BatchSlowSpiderListener back.size():"+back.size());
             for(String url: back.keySet()){
                 log.error("BatchSlowSpiderListener未处理完成:"+url);
@@ -98,6 +93,7 @@ public class BatchSlowSpiderListener {
 
 
     public Runnable getTask(CountDownLatch countDownLatch,String message){
+        log.info("getTask url:"+message);
         Runnable runnable = () -> {
             log.info("spider receive:" + message);
             String url = message;

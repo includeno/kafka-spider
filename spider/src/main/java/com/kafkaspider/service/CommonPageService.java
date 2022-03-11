@@ -34,34 +34,6 @@ public class CommonPageService {
     @Autowired
     Gson gson;
 
-    //多线程方法
-    public Future<UrlRecord> addTask(ThreadPoolExecutor executor, String url) {
-
-        Callable<UrlRecord> callable = () -> {
-            SeleniumConfig config = new SeleniumConfig();
-            WebDriver chrome = config.getWebDriver();
-            chrome.get(url);
-            Integer random = new Random(9).nextInt();
-            try {
-                TimeUnit.MILLISECONDS.sleep(1072 + random * 123);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            UrlRecord record = new UrlRecord();
-            record.setUrl(url);
-            try {
-                record.setContent(getMainContent(chrome, url));
-            } catch (Exception e) {
-
-            } finally {
-                chrome.close();
-                return record;
-            }
-
-        };
-        return executor.submit(callable);
-    }
-
     //爬取网页的主要信息
     public UrlRecord crawl(UrlRecord record) {
         String url = record.getUrl();
@@ -78,7 +50,7 @@ public class CommonPageService {
                 ContentService service = (ContentService) SpringContextUtil.getContext().getBean(c);
                 //仅使用符合条件的爬虫
                 if ((boolean) match.invoke(service, url) == true) {
-                    log.info("match:" + c.getClass());
+                    log.info("match:" + c.getClass().getName());
                     //使用特定网站专用的浏览器开启方法
                     Method getDriver = c.getMethod("getDriver", new Class[]{});
                     chrome = (WebDriver) getDriver.invoke(service);
@@ -109,12 +81,13 @@ public class CommonPageService {
                         Integer view = (Integer) getView.invoke(service, chrome, url);
                         record.setView(view);
 
-                        log.warn("record: len+" +record.getContent().length()+" time"+record.getTime());
+                        log.warn("record: len+" +record.getContent().length()+" time"+record.getTime()+ " url:"+url);
                     }
                     catch (Exception e){
-                        log.error("record error");
+                        log.error("record error"+url);
                     }
                     finally {
+                        log.warn("record return"+url);
                         break;//在找到匹配的爬虫之后跳出循环节省时间
                     }
                 }
@@ -125,42 +98,13 @@ public class CommonPageService {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } finally {
+                log.warn("close chrome"+url);
                 if (chrome != null) {
                     chrome.close();
                 }
             }
         }
         return record;
-    }
-
-    public String getMainContent(WebDriver chrome, String url) {
-        URL resource = null;
-        try {
-            resource = new URL(url);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        String host = resource.getHost();// 获取主机名
-        log.info("host:" + host+" url:"+url);
-        WebElement content;
-
-
-        switch (host) {
-            case "blog.csdn.net":
-                //content = chrome.findElement(By.className("blogpost-body"));
-                content = chrome.findElement(By.tagName("article"));
-                break;
-            case "www.cnblogs.com":
-                content = chrome.findElement(By.id("post_detail"));
-                break;
-            default:
-                content = chrome.findElement(By.tagName("body"));
-                break;
-        }
-        log.info("WebElement content:"+content);
-        String ans=content.getText();
-        log.info("MainContent is:"+ans);
-        return ans;
     }
 
 }
