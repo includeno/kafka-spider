@@ -2,6 +2,7 @@ package com.kafkaspider.service;
 
 import com.google.gson.Gson;
 import com.kafkaspider.config.KafkaTopic;
+import com.kafkaspider.config.KafkaTopicString;
 import com.kafkaspider.request.SubmitRequest;
 import com.kafkaspider.util.UrlFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ public class SubmitService {
 
         for(String url:ans){
             //发送爬虫请求
-            kafkaTemplate.send(KafkaTopic.spidertask, url).addCallback(new SuccessCallback() {
+            kafkaTemplate.send(KafkaTopicString.spidertask, url).addCallback(new SuccessCallback() {
                 @Override
                 public void onSuccess(Object o) {
                     log.info("spidertask send success "+url);

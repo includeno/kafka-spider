@@ -2,6 +2,7 @@ package com.kafkaspider.listener;
 
 import com.google.gson.Gson;
 import com.kafkaspider.config.KafkaTopic;
+import com.kafkaspider.config.KafkaTopicString;
 import com.kafkaspider.entity.SpiderRecord;
 import com.kafkaspider.message.SpiderResultMessage;
 import com.kafkaspider.service.sql.SpiderRecordService;
@@ -31,7 +32,7 @@ public class SpiderResultListener {
 
     @KafkaListener(
             id = "BatchSpiderResultConsumer",
-            topics = KafkaTopic.spiderresult,
+            topics = KafkaTopicString.spiderresult,
             containerFactory = "batchFactory",
             properties={
                     "max.poll.interval.ms:30000",

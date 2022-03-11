@@ -10,16 +10,13 @@ import org.springframework.kafka.config.TopicBuilder;
 @EnableKafka
 @Configuration
 public class KafkaTopic {
-    //spider
-    public static final String spidertask ="spidertask";//spidertask
-    public static final String spiderresult="spiderresult";//spiderresult
 
     @Value("${spider.partition.count}")
     Integer count;
 
     @Bean
     public NewTopic spidertask() {
-        return TopicBuilder.name(KafkaTopic.spidertask)
+        return TopicBuilder.name(KafkaTopicString.spidertask)
                 .partitions(count)
                 .replicas(1)
                 .build();
@@ -27,7 +24,7 @@ public class KafkaTopic {
 
     @Bean
     public NewTopic spiderresult() {
-        return TopicBuilder.name(KafkaTopic.spiderresult)
+        return TopicBuilder.name(KafkaTopicString.spiderresult)
                 .partitions(count)
                 .replicas(1)
                 .build();

@@ -2,6 +2,7 @@ package com.kafkaspider.listener;
 
 import com.google.gson.Gson;
 import com.kafkaspider.config.KafkaTopic;
+import com.kafkaspider.config.KafkaTopicString;
 import com.kafkaspider.config.SpiderLimit;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
@@ -43,12 +44,12 @@ public class BatchSpiderListener {
 
     @KafkaListener(
             id = "SpidertaskConsumer",
-            topics = KafkaTopic.spidertask,
+            topics = KafkaTopicString.spidertask,
             containerFactory = "batchFactory",
             properties={
-                    "fetch.max.wait.ms:600",
+                    "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:300000",
-                    "max.poll.records:8",
+                    "max.poll.records:10",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:60000"
             }
@@ -58,13 +59,13 @@ public class BatchSpiderListener {
         if(times.get("max")==null){
             times.put("max",30L);
         }
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(5));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 16, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(times.get("max")>150L?150L:times.get("max"),TimeUnit.SECONDS);
+            downLatch.await(times.get("max")>240L?240L:times.get("max"),TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
@@ -93,7 +94,7 @@ public class BatchSpiderListener {
             catch (Exception e){
                 log.error("commonPageService.crawl error");
                 //遇到错误，重新发送任务
-                kafkaTemplate.send(KafkaTopic.spidertask, url).addCallback(new SuccessCallback() {
+                kafkaTemplate.send(KafkaTopicString.spidertask, url).addCallback(new SuccessCallback() {
                     @Override
                     public void onSuccess(Object o) {
                         log.info("RESEND spidertask send success "+url);
@@ -127,7 +128,7 @@ public class BatchSpiderListener {
             spiderResultMessage.setCode(response.getCode());
             spiderResultMessage.setSimhash(simhash);
             //步骤6 任务添加至sparktask队列
-            kafkaTemplate.send(KafkaTopic.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
+            kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                 @Override
                 public void onSuccess(Object o) {
                     Long exp=(System.currentTimeMillis()-start);

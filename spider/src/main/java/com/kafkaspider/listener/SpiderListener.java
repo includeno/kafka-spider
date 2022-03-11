@@ -3,6 +3,7 @@ package com.kafkaspider.listener;
 import com.google.gson.Gson;
 
 import com.kafkaspider.config.KafkaTopic;
+import com.kafkaspider.config.KafkaTopicString;
 import com.kafkaspider.config.SpiderLimit;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
@@ -89,7 +90,7 @@ public class SpiderListener {
             spiderResultMessage.setCode(response.getCode());
             spiderResultMessage.setSimhash(simhash);
             //步骤6 任务添加至sparktask队列
-            kafkaTemplate.send(KafkaTopic.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
+            kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                 @Override
                 public void onSuccess(Object o) {
                     log.info("SpiderResultMessage send_success " + url);
