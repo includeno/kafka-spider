@@ -130,16 +130,16 @@ public class BatchSpiderListener {
             kafkaTemplate.send(KafkaTopic.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                 @Override
                 public void onSuccess(Object o) {
-                    log.info("SpiderResultMessage send_success " + url);
-                    back.put(url,null);
-                    countDownLatch.countDown();
-
                     Long exp=(System.currentTimeMillis()-start);
                     times.put("sum", times.getOrDefault("sum",0L)+exp);
                     times.put("count",times.getOrDefault("count",0L)+1L);
                     times.put("avg",times.get("sum")/times.get("count"));
                     times.put("max",Math.max(times.getOrDefault("max",0L),exp));
                     log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
+
+                    log.info("SpiderResultMessage send_success " + url);
+                    back.put(url,null);
+                    countDownLatch.countDown();
                 }
             }, new FailureCallback() {
                 @Override
