@@ -64,6 +64,7 @@ public class BatchSpiderListener {
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
+
             }
             downLatch.await(times.get("max")>240L?240L:times.get("max"),TimeUnit.SECONDS);
         }
@@ -107,47 +108,47 @@ public class BatchSpiderListener {
                 });
             }
             finally {
-
-            }
-            String simhash="";
-            if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
-                response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
-                response.setRecord(record);
-            }
-            else if(record!=null&&record.getTitle().length()>0&&record.getContent().length()>0){
-                response.setCode(SpiderCode.SUCCESS.getCode());
-                response.setRecord(record);
-                log.info("crawl result:"+gson.toJson(response));
-            }
-            else {
-                response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
-                response.setRecord(record);
-            }
-            SpiderResultMessage spiderResultMessage = SpiderResultMessage.copyUrlRecord(record);
-            spiderResultMessage.setMessage(response.getMessage());
-            spiderResultMessage.setCode(response.getCode());
-            spiderResultMessage.setSimhash(simhash);
-            //步骤6 任务添加至sparktask队列
-            kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
-                @Override
-                public void onSuccess(Object o) {
-                    Long exp=(System.currentTimeMillis()-start);
-                    times.put("sum", times.getOrDefault("sum",0L)+exp);
-                    times.put("count",times.getOrDefault("count",0L)+1L);
-                    times.put("avg",times.get("sum")/times.get("count"));
-                    times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-                    log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
-
-                    log.info("SpiderResultMessage send_success " + url);
-                    back.put(url,null);
-                    countDownLatch.countDown();
+                String simhash="";
+                if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
+                    response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
+                    response.setRecord(record);
                 }
-            }, new FailureCallback() {
-                @Override
-                public void onFailure(Throwable throwable) {
-                    log.error("SpiderResultMessage send_error " + url + " " + throwable.getMessage());
+                else if(record!=null&&record.getTitle().length()>0&&record.getContent().length()>0){
+                    response.setCode(SpiderCode.SUCCESS.getCode());
+                    response.setRecord(record);
                 }
-            });
+                else {
+                    response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
+                    response.setRecord(record);
+                }
+                SpiderResultMessage spiderResultMessage = SpiderResultMessage.copyUrlRecord(record);
+                spiderResultMessage.setMessage(response.getMessage());
+                spiderResultMessage.setCode(response.getCode());
+                spiderResultMessage.setSimhash(simhash);
+                //步骤6 任务添加至sparktask队列
+                kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
+                    @Override
+                    public void onSuccess(Object o) {
+                        Long exp=(System.currentTimeMillis()-start);
+                        times.put("sum", times.getOrDefault("sum",0L)+exp);
+                        times.put("count",times.getOrDefault("count",0L)+1L);
+                        times.put("avg",times.get("sum")/times.get("count"));
+                        times.put("max",Math.max(times.getOrDefault("max",0L),exp));
+                        log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
+
+                        log.info("SpiderResultMessage send_success " + url);
+                        back.put(url,null);
+                        countDownLatch.countDown();
+                    }
+                }, new FailureCallback() {
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        log.error("SpiderResultMessage send_error " + url + " " + throwable.getMessage());
+                    }
+                });
+                kafkaTemplate.flush();
+            }
+
         };
         return runnable;
     }
