@@ -46,7 +46,7 @@ public class BatchSpiderListener {
             topics = KafkaTopic.spidertask,
             containerFactory = "batchFactory",
             properties={
-                    "fetch.max.wait.ms:400",
+                    "fetch.max.wait.ms:600",
                     "max.poll.interval.ms:300000",
                     "max.poll.records:8",
                     "auto.commit.interval.ms:100",
@@ -54,16 +54,17 @@ public class BatchSpiderListener {
             }
     )
     public void batchSpiderTask(List<String> messages){
+        log.info("batchSpiderTask receive "+messages.size());
         if(times.get("max")==null){
             times.put("max",30L);
         }
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 20, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(5));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(5));
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
             }
-            downLatch.await(times.get("max")>60L?60L:times.get("max"),TimeUnit.SECONDS);
+            downLatch.await(times.get("max")>150L?150L:times.get("max"),TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
