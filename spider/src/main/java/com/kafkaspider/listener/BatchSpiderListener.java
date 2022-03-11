@@ -64,9 +64,8 @@ public class BatchSpiderListener {
         try {
             for(String url:messages){
                 executor.submit(getTask(downLatch,url));
-
             }
-            downLatch.await(times.get("max")>240L?240L:times.get("max"),TimeUnit.SECONDS);
+            downLatch.await(60,TimeUnit.SECONDS);
         }
         catch (Exception e){
             log.error("executor error back:"+back.size());
@@ -75,6 +74,9 @@ public class BatchSpiderListener {
         finally {
             kafkaTemplate.flush();
             executor.shutdown();
+            for(String url: back.keySet()){
+                log.error("未处理完成:"+url);
+            }
         }
     }
 
