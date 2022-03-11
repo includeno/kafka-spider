@@ -75,12 +75,14 @@ public class BatchSpiderListener {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            log.info("BatchSpiderListener back.size():"+back.size());
             for(String url: back.keySet()){
+                log.error("BatchSpiderListener未处理完成:"+url);
                 kafkaTemplate.send(KafkaTopicString.spidertask_slow, url).addCallback(new SuccessCallback() {
                     @Override
                     public void onSuccess(Object o) {
-                        log.info("SPIDER_SLOW send_success " + url);
                         back.put(url,null);
+                        log.info("SPIDER_SLOW send_success " + url+" ");
                     }
                 }, new FailureCallback() {
                     @Override
@@ -105,11 +107,13 @@ public class BatchSpiderListener {
             SpiderResponse response=new SpiderResponse();
             UrlRecord record = new UrlRecord();
             record.setUrl(url);
+            boolean error=false;
             try {
                 record=commonPageService.crawl(record);
             }
             catch (Exception e){
                 log.error("commonPageService.crawl error");
+                error=true;
                 //遇到错误，重新发送任务
                 kafkaTemplate.send(KafkaTopicString.spidertask_slow, url).addCallback(new SuccessCallback() {
                     @Override
@@ -137,6 +141,17 @@ public class BatchSpiderListener {
                     response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
                     response.setRecord(record);
                 }
+
+                Long exp=(System.currentTimeMillis()-start);
+                times.put("sum", times.getOrDefault("sum",0L)+exp);
+                times.put("count",times.getOrDefault("count",0L)+1L);
+                times.put("avg",times.get("sum")/times.get("count"));
+                times.put("max",Math.max(times.getOrDefault("max",0L),exp));
+                log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
+
+                if(error==true){
+                    return;
+                }
                 SpiderResultMessage spiderResultMessage = SpiderResultMessage.copyUrlRecord(record);
                 spiderResultMessage.setMessage(response.getMessage());
                 spiderResultMessage.setCode(response.getCode());
@@ -156,15 +171,7 @@ public class BatchSpiderListener {
                     }
                 });
                 kafkaTemplate.flush();
-                Long exp=(System.currentTimeMillis()-start);
-                times.put("sum", times.getOrDefault("sum",0L)+exp);
-                times.put("count",times.getOrDefault("count",0L)+1L);
-                times.put("avg",times.get("sum")/times.get("count"));
-                times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-                log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
-
             }
-
 
         };
         return runnable;

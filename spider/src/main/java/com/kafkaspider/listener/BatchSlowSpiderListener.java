@@ -73,8 +73,9 @@ public class BatchSlowSpiderListener {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            log.info("BatchSlowSpiderListener back.size():"+back.size());
             for(String url: back.keySet()){
-                log.error("未处理完成:"+url);
+                log.error("BatchSlowSpiderListener未处理完成:"+url);
                 SpiderResultMessage spiderResultMessage = new SpiderResultMessage();
                 spiderResultMessage.setMessage("无法爬取");
                 spiderResultMessage.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
@@ -155,7 +156,6 @@ public class BatchSlowSpiderListener {
                 times.put("avg",times.get("sum")/times.get("count"));
                 times.put("max",Math.max(times.getOrDefault("max",0L),exp));
                 log.info("url:"+url+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
-
             }
 
 
