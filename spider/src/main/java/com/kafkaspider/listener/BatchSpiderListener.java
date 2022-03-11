@@ -49,7 +49,7 @@ public class BatchSpiderListener {
             properties={
                     "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:300000",
-                    "max.poll.records:10",
+                    "max.poll.records:16",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:60000"
             }
