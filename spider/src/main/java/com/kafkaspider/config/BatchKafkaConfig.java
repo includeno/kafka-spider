@@ -27,7 +27,7 @@ public class BatchKafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(batchConsumerFactory());
-        factory.setConcurrency(3);
+        factory.setConcurrency(6);
         factory.getContainerProperties().setPollTimeout(300000);
         factory.setBatchListener(true);//批量消费
         return factory;

@@ -77,7 +77,7 @@ public class BatchSlowSpiderListener {
                 spiderResultMessage.setMessage("无法爬取");
                 spiderResultMessage.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
                 spiderResultMessage.setSimhash("");
-                //步骤6 任务添加至sparktask队列
+
                 kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage)).addCallback(new SuccessCallback() {
                     @Override
                     public void onSuccess(Object o) {
