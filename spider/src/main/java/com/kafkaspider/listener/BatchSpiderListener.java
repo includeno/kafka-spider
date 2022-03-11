@@ -132,7 +132,7 @@ public class BatchSpiderListener {
             }
             finally {
                 String simhash="";
-                if(record!=null&&(record.getTitle()==null||record.getContent()==null)){
+                if(record!=null&&(record.getTitle()==null||record.getContent()==null||record.getTime()==null)){
                     response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
                     response.setRecord(record);
                 }
