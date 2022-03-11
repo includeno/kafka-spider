@@ -57,6 +57,9 @@ public class BatchSlowSpiderListener {
         CountDownLatch downLatch=new CountDownLatch(messages.size());
         try {
             for(String url:messages){
+                if(url.equals("")){
+                    continue;
+                }
                 executor.submit(getTask(downLatch,url));
             }
             downLatch.await(240,TimeUnit.SECONDS);
