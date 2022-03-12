@@ -62,7 +62,7 @@ public class BatchSlowSpiderListener implements BatchListener{
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
         log.info("batchSlowSpiderTask after filter" + gson.toJson(list));
 
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 6, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 2, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(list.size());
         List<Callable<UrlRecord>> tasks=new ArrayList<>();
         List<Future<UrlRecord>> futures=new ArrayList<>();

@@ -51,7 +51,7 @@ public class BatchSpiderListener implements BatchListener{
             properties={
                     "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:60000",
-                    "max.poll.records:10",
+                    "max.poll.records:4",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:60000"
             }
@@ -68,7 +68,7 @@ public class BatchSpiderListener implements BatchListener{
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
         log.info("batchSpiderTask after filter" + gson.toJson(list));
 
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 8, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 4, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(list.size());
         List<Callable<UrlRecord>> tasks=new ArrayList<>();
         List<Future<UrlRecord>> futures=new ArrayList<>();
