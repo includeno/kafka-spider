@@ -3,9 +3,9 @@ package com.kafkaspider.config;
 public class KafkaTopicString {
 
     //spider
-    public static final String spidertask ="spidertask-2022031102";//spidertask
-    public static final String spidertask_slow ="spidertask-slow-2022031102";//spidertask-slow
-    public static final String spiderresult="spiderresult-2022031102";//spiderresult
+    public static final String spidertask ="spidertask-20220312";//spidertask
+    public static final String spidertask_slow ="spidertask-slow-20220312";//spidertask-slow
+    public static final String spiderresult="spiderresult-20220312";//spiderresult
 
     //Spark监听
 
