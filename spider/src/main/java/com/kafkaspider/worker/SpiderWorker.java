@@ -1,5 +1,6 @@
 package com.kafkaspider.worker;
 
+import com.google.gson.Gson;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.service.CommonPageService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,9 @@ public class SpiderWorker {
     @Autowired
     CommonPageService commonPageService;
 
+    @Autowired
+    Gson gson;
+
     public Callable<UrlRecord> getTask(CountDownLatch countDownLatch,String message,Integer pageLoadTimeout,Integer scriptTimeout,Integer implicitlyWait) {
         Callable<UrlRecord> callable = () -> {
             log.info("spider receive:" + message);
@@ -29,11 +33,10 @@ public class SpiderWorker {
                 log.info("after crawl "+url);
             }
             catch (Exception e){
-                log.error("commonPageService.crawl error"+url);
+                log.error("commonPageService.crawl error"+url+" exception:"+e.getCause());
             }
             finally {
                 countDownLatch.countDown();
-                log.info("return crawl:"+url);
                 return record;
             }
         };
@@ -49,16 +52,15 @@ public class SpiderWorker {
             boolean error=false;
             try {
                 log.info("before crawl "+url);
-                record=commonPageService.crawl(record);
+                record=commonPageService.crawl(record,30,3,5);
                 log.info("after crawl "+url);
             }
             catch (Exception e){
-                log.error("commonPageService.crawl error"+url);
-                error=true;
+                log.error("commonPageService.crawl error"+url+" exception:"+e.getCause());
             }
             finally {
                 countDownLatch.countDown();
-                log.info("return crawl:"+url);
+                log.warn("return crawl: "+url +" data:"+gson.toJson(record));
                 return record;
             }
         };

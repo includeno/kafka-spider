@@ -45,13 +45,13 @@ public class BatchSlowSpiderListener implements BatchListener{
             properties={
                     "fetch.max.wait.ms:500",
                     "max.poll.interval.ms:180000",
-                    "max.poll.records:4",
+                    "max.poll.records:2",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:120000"
             }
     )
     public void batchSlowSpiderTask(List<String> messages) throws ExecutionException, InterruptedException {
-        log.info("batchSlowSpiderTask receive "+messages.size());
+        log.info("BatchSlowSpiderListener receive "+messages.size());
         ConcurrentHashMap<String,Long> timeRecord=new ConcurrentHashMap<>();
         timeRecord.put("start",System.currentTimeMillis());//记录起始时间
 
@@ -60,9 +60,9 @@ public class BatchSlowSpiderListener implements BatchListener{
         HashSet<String> set=new HashSet<>();
         set.addAll(messages);
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
-        log.info("batchSlowSpiderTask after filter" + gson.toJson(list));
+        log.info("BatchSlowSpiderListener after filter" + gson.toJson(list));
 
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 4, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 2, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(list.size());
         List<Callable<UrlRecord>> tasks=new ArrayList<>();
         List<Future<UrlRecord>> futures=new ArrayList<>();
@@ -71,21 +71,21 @@ public class BatchSlowSpiderListener implements BatchListener{
                 log.warn("skip blank");
                 continue;
             }
-            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url);
+            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url,60,5,15);
             tasks.add(task);
             Future<UrlRecord> future=executor.submit(task);
             futures.add(future);
             back.putIfAbsent(future,url);
-            log.info("batchSlowSpiderTask add task:"+url);
+            log.info("BatchSlowSpiderListener add task:"+url);
         }
-        log.info("batchSlowSpiderTask executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
+        log.info("BatchSlowSpiderListener executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
 
         try {
             //等待全部处理完成
             downLatch.await(160,TimeUnit.SECONDS);
-            log.warn("downLatch completed!");
+            log.warn("BatchSlowSpiderListener downLatch completed!");
         } catch (InterruptedException e) {
-            log.error("downLatch error!");
+            log.error("BatchSlowSpiderListener downLatch error!");
         }
         finally {
             if(executor!=null){

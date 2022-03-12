@@ -61,12 +61,12 @@ public class BatchSpiderListener implements BatchListener{
         timeRecord.put("start",System.currentTimeMillis());//记录起始时间
 
         ConcurrentHashMap<Future<UrlRecord>,String> back=new ConcurrentHashMap<>();
-        log.info("batchSpiderTask receive "+messages.size());
+        log.info("BatchSpiderListener receive "+messages.size());
         //去重
         HashSet<String> set=new HashSet<>();
         set.addAll(messages);
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
-        log.info("batchSpiderTask after filter" + gson.toJson(list));
+        log.info("BatchSpiderListener after filter" + gson.toJson(list));
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
         CountDownLatch downLatch=new CountDownLatch(list.size());
@@ -77,25 +77,26 @@ public class BatchSpiderListener implements BatchListener{
                 log.warn("skip blank");
                 continue;
             }
-            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url);
+            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url,30,3,5);
             tasks.add(task);
             Future<UrlRecord> future=executor.submit(task);
             futures.add(future);
             back.putIfAbsent(future,url);
-            log.info("add task:"+url);
+            log.info("BatchSpiderListener add task:"+url);
         }
-        log.info("executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
+        log.info("BatchSpiderListener executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
 
         try {
             //等待全部处理完成
-            downLatch.await(30,TimeUnit.SECONDS);
-            log.warn("downLatch completed!");
+            downLatch.await(40,TimeUnit.SECONDS);
+            executor.shutdown();
+            log.warn("BatchSpiderListener downLatch completed!");
         } catch (InterruptedException e) {
-            log.error("downLatch error!");
+            log.error("BatchSpiderListener downLatch error!");
         }
         finally {
             if(executor!=null){
-                executor.shutdownNow();
+                executor.shutdown();
             }
             resolve(back,futures);
             Long exp=(System.currentTimeMillis()-timeRecord.get("start"));
@@ -103,7 +104,7 @@ public class BatchSpiderListener implements BatchListener{
             times.put("count",times.getOrDefault("count",0L)+1L);
             times.put("avg",times.get("sum")/times.get("count"));
             times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-            log.info("STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
+            log.info("BatchSpiderListener STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
         }
     }
 
@@ -132,12 +133,12 @@ public class BatchSpiderListener implements BatchListener{
 
                 UrlRecord record=new UrlRecord();
                 record.setUrl(url);
-                log.info("record url when downLatcherror:"+record.getUrl());
+                log.warn("BatchSpiderListener resolve1: "+record.getUrl() +" data:"+gson.toJson(record));
                 resolveError(record);//非正常结束
             }
             else{
                 UrlRecord record = future.get();
-                log.info("record url when downLatcherror future.get():"+record.getUrl());
+                log.warn("BatchSpiderListener resolve2: "+record.getUrl() +" data:"+gson.toJson(record));
                 SpiderResponse response = generateResponse(record);
                 if(response.getCode().equals(SpiderCode.SPIDER_UNREACHABLE.getCode())){
                     //遇到错误，重新发送任务
@@ -152,6 +153,7 @@ public class BatchSpiderListener implements BatchListener{
 
     @Override
     public void resolveNormal(UrlRecord record){
+        log.info("BatchSpiderListener resolveNormal "+record.getUrl());
         SpiderResponse response= generateResponse(record);
         SpiderResultMessage spiderResultMessage = SpiderResultMessage.copyUrlRecord(record);
         spiderResultMessage.setMessage(response.getMessage());
@@ -160,25 +162,26 @@ public class BatchSpiderListener implements BatchListener{
         ListenableFuture task= kafkaTemplate.send(KafkaTopicString.spiderresult, gson.toJson(spiderResultMessage));
         try {
             task.get();
-            log.info("SpiderResultMessage success " + record.getUrl());
+            log.info("BatchSpiderListener SpiderResultMessage success " + record.getUrl());
         } catch (InterruptedException e1) {
-            log.error("InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e1.getMessage());
+            log.error("BatchSpiderListener InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e1.getMessage());
         } catch (ExecutionException e2) {
-            log.error("InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e2.getMessage());
+            log.error("BatchSpiderListener InterruptedException SpiderResultMessage send_error " + record.getUrl() + " " + e2.getMessage());
         }
     }
 
     @Override
     public void resolveError(UrlRecord record){
+        log.info("BatchSpiderListener resolveError "+record.getUrl());
         kafkaTemplate.send(KafkaTopicString.spidertask_slow, record.getUrl()).addCallback(new SuccessCallback() {
             @Override
             public void onSuccess(Object o) {
-                log.info("SPIDER_UNREACHABLE send_success " + record.getUrl());
+                log.info("BatchSpiderListener SPIDER_UNREACHABLE send_success " + record.getUrl());
             }
         }, new FailureCallback() {
             @Override
             public void onFailure(Throwable throwable) {
-                log.error("SPIDER_UNREACHABLE send_error " + record.getUrl() + " " + throwable.getMessage());
+                log.error("BatchSpiderListener SPIDER_UNREACHABLE send_error " + record.getUrl() + " " + throwable.getMessage());
             }
         });
         kafkaTemplate.flush();
