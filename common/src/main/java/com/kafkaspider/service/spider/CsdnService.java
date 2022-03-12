@@ -37,42 +37,34 @@ public class CsdnService implements ContentService, MatchService, CleanService {
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(false);
+        WebDriver chrome = SeleniumConfig.getWebDriver(true);
         return chrome;
     }
 
     @Override
     public void wait(WebDriver chrome, String url) {
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
+        WebDriverWait wait = new WebDriverWait(chrome, 10, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
                 return text.findElement(By.tagName("article"));
             }
         });
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        log.info("wait article completed");
-        Actions action = new Actions(chrome);
-        Integer random = new Random(30).nextInt();
-        for (int i = 0; i < 10 + random; i++) {
-            action.sendKeys(Keys.chord(Keys.DOWN));
-        }
         JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
         javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+
         try {
-            WebElement content = chrome.findElement(By.className("passport-container"));
-            if (content != null) {
+            WebElement passport = chrome.findElement(By.className("passport-container"));
+            if (passport != null) {
+                passport.click();
                 WebElement button = chrome.findElement(By.xpath("//span[contains(text(),'x')]"));
                 button.click();
                 log.info("wait passport completed");
             }
         } catch (NoSuchElementException exception) {
-            log.error("can't find passport");
+            log.warn("can't find passport");
         }
+        log.info("wait article completed");
     }
 
     @Override
@@ -142,8 +134,6 @@ public class CsdnService implements ContentService, MatchService, CleanService {
 
     @Override
     public Date getTime(WebDriver chrome, String url) {
-        JavascriptExecutor javascriptExecutor = (JavascriptExecutor) chrome;
-        javascriptExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight)");
         try {
             WebElement content = chrome.findElement(By.className("passport-container"));
             if (content != null) {
@@ -154,17 +144,10 @@ public class CsdnService implements ContentService, MatchService, CleanService {
         } catch (NoSuchElementException exception) {
             log.error("can't find passport");
         }
-
+        WebElement time = chrome.findElement(By.className("time"));
         //class time
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
-        WebElement content = wait.until(new ExpectedCondition<WebElement>() {
-            @Override
-            public WebElement apply(WebDriver text) {
-                return text.findElement(By.className("time"));
-            }
-        });
-        String ans = content.getText();
-        System.out.println("content.getText():"+content.getText());
+        String ans = time.getText();
+        System.out.println("content.getText():"+time.getText());
         //正则匹配获取字符串中的时间 于 2018-04-22 14:44:38 发布
 
         Date res = new Date();

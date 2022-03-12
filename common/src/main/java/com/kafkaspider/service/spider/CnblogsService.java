@@ -37,22 +37,17 @@ public class CnblogsService implements ContentService, MatchService, CleanServic
 
     @Override
     public WebDriver getDriver() {
-        WebDriver chrome = SeleniumConfig.getWebDriver(false);
+        WebDriver chrome = SeleniumConfig.getWebDriver(true);
         return chrome;
     }
 
     @Override
     public void wait(WebDriver chrome, String url) {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        WebDriverWait wait = new WebDriverWait(chrome, 30, 1);
+        WebDriverWait wait = new WebDriverWait(chrome, 10, 1);
         WebElement searchInput = wait.until(new ExpectedCondition<WebElement>() {
             @Override
             public WebElement apply(WebDriver text) {
-                return text.findElement(By.id("post_detail"));
+                return text.findElement(By.id("cnblogs_post_body"));
             }
         });
         log.info("wait article completed");

@@ -2,42 +2,66 @@ package com.kafkaspider.worker;
 
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.service.CommonPageService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-public class SpiderWorker implements Callable<UrlRecord> {
+@Slf4j
+@Component
+public class SpiderWorker {
 
-    private CountDownLatch downLatch;
-    private String url;
-    private CommonPageService commonPageService;
-    private Logger log;
+    @Autowired
+    CommonPageService commonPageService;
 
-    public SpiderWorker(CountDownLatch downLatch, String url, CommonPageService commonPageService, Logger log){
-        this.downLatch = downLatch;
-        this.url = url;
-        this.commonPageService=commonPageService;
-        this.log=log;
+    public Callable<UrlRecord> getTask(CountDownLatch countDownLatch,String message,Integer pageLoadTimeout,Integer scriptTimeout,Integer implicitlyWait) {
+        Callable<UrlRecord> callable = () -> {
+            log.info("spider receive:" + message);
+            String url = message;
+            UrlRecord record = new UrlRecord();
+            record.setUrl(url);
+            try {
+                log.info("before crawl "+url);
+                record=commonPageService.crawl(record,pageLoadTimeout,scriptTimeout,implicitlyWait);
+                log.info("after crawl "+url);
+            }
+            catch (Exception e){
+                log.error("commonPageService.crawl error"+url);
+            }
+            finally {
+                countDownLatch.countDown();
+                log.info("return crawl:"+url);
+                return record;
+            }
+        };
+        return callable;
     }
 
-    @Override
-    public UrlRecord call() throws Exception {
-        UrlRecord record=new UrlRecord();
-        record.setUrl(url);
-        try {
-            log.info("commonPageService crawl begin:"+url);
-            record=commonPageService.crawl(record);
-            log.info("commonPageService crawl end:"+url);
-        }
-        catch (Exception e){
-            System.out.println("factoryTask error!");
-        }
-        finally {
-
-        }
-        System.out.println(this.url + "活干完了！");
-        this.downLatch.countDown();
-        return record;
+    public Callable<UrlRecord> getTask(CountDownLatch countDownLatch,String message) {
+        Callable<UrlRecord> callable = () -> {
+            log.info("spider receive:" + message);
+            String url = message;
+            UrlRecord record = new UrlRecord();
+            record.setUrl(url);
+            boolean error=false;
+            try {
+                log.info("before crawl "+url);
+                record=commonPageService.crawl(record);
+                log.info("after crawl "+url);
+            }
+            catch (Exception e){
+                log.error("commonPageService.crawl error"+url);
+                error=true;
+            }
+            finally {
+                countDownLatch.countDown();
+                log.info("return crawl:"+url);
+                return record;
+            }
+        };
+        return callable;
     }
 }

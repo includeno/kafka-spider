@@ -1,9 +1,7 @@
 package com.kafkaspider.listener;
 
 import com.google.gson.Gson;
-import com.kafkaspider.config.KafkaTopic;
 import com.kafkaspider.config.KafkaTopicString;
-import com.kafkaspider.config.SpiderLimit;
 import com.kafkaspider.entity.UrlRecord;
 import com.kafkaspider.enums.SpiderCode;
 import com.kafkaspider.message.SpiderResultMessage;
@@ -20,7 +18,6 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.SuccessCallback;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.*;
@@ -28,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-public class BatchSpiderListener {
+public class BatchSpiderListener implements BatchListener{
     static ConcurrentHashMap<String,Long> times=new ConcurrentHashMap<>();
 
     @Autowired
@@ -38,8 +35,10 @@ public class BatchSpiderListener {
     KafkaTemplate kafkaTemplate;
 
     @Autowired
-    CommonPageService commonPageService;
+    SpiderWorker spiderWorker;
 
+    //https://cloud.tencent.com/developer/news/427285
+    //https://www.cnblogs.com/huxi2b/p/6124937.html
     //https://strimzi.io/blog/2021/01/07/consumer-tuning/
     //max.poll.interval.ms 表示 consumer 每两次 poll 消息的时间间隔。简单地说，其实就是 consumer 每次消费消息的时长。如果消息处理的逻辑很重，那么市场就要相应延长。否则如果时间到了 consumer 还么消费完，broker 会默认认为 consumer 死了，发起 rebalance。
     //
@@ -51,24 +50,26 @@ public class BatchSpiderListener {
             containerFactory = "batchFactory",
             properties={
                     "fetch.max.wait.ms:500",
-                    "max.poll.interval.ms:180000",
+                    "max.poll.interval.ms:60000",
                     "max.poll.records:10",
                     "auto.commit.interval.ms:100",
                     "session.timeout.ms:60000"
             }
     )
     public void batchSpiderTask(List<String> messages) throws Exception {
+        ConcurrentHashMap<String,Long> timeRecord=new ConcurrentHashMap<>();
+        timeRecord.put("start",System.currentTimeMillis());//记录起始时间
+
         ConcurrentHashMap<Future<UrlRecord>,String> back=new ConcurrentHashMap<>();
         log.info("batchSpiderTask receive "+messages.size());
         //去重
         HashSet<String> set=new HashSet<>();
         set.addAll(messages);
         List<String> list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
-        log.info("batchSpiderTask after filter "+messages.size());
-        log.info("batchSpiderTask after filter list:"+ Arrays.toString(list.toArray()));
+        log.info("batchSpiderTask after filter" + gson.toJson(list));
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(2, 10, 6, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
-        CountDownLatch downLatch=new CountDownLatch(messages.size());
+        CountDownLatch downLatch=new CountDownLatch(list.size());
         List<Callable<UrlRecord>> tasks=new ArrayList<>();
         List<Future<UrlRecord>> futures=new ArrayList<>();
         for(String url:list){
@@ -76,82 +77,39 @@ public class BatchSpiderListener {
                 log.warn("skip blank");
                 continue;
             }
-            log.info("add task:"+url);
-            Callable<UrlRecord> task = getTask(downLatch, url);
+            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url);
             tasks.add(task);
             Future<UrlRecord> future=executor.submit(task);
             futures.add(future);
             back.putIfAbsent(future,url);
+            log.info("add task:"+url);
         }
         log.info("executor size: futures"+futures.size()+" tasks:"+tasks.size()+" back:"+back.size());
 
-        boolean downLatcherror=false;
         try {
-            long start=System.currentTimeMillis();
             //等待全部处理完成
-            downLatch.await(120,TimeUnit.SECONDS);
+            downLatch.await(30,TimeUnit.SECONDS);
             log.warn("downLatch completed!");
-
-            //获取全部处理结果
-            List<UrlRecord> records=new ArrayList<>();
-            for(Future<UrlRecord> future:futures){
-                records.add(future.get());
-            }
-            for(UrlRecord record:records){
-                log.info("record url after downLatch:"+record.getUrl());
-                SpiderResponse response = normal(record);
-
-                if(response.getCode().equals(SpiderCode.SPIDER_UNREACHABLE.getCode())){
-                    //遇到错误，重新发送任务
-                    ListenableFuture task = kafkaTemplate.send(KafkaTopicString.spidertask_slow, record.getUrl());
-                    try {
-                        task.get();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                    return;
-                }
-                else{
-                    resolveNormal(record);
-                }
-
-                Long exp=(System.currentTimeMillis()-start);
-                times.put("sum", times.getOrDefault("sum",0L)+exp);
-                times.put("count",times.getOrDefault("count",0L)+1L);
-                times.put("avg",times.get("sum")/times.get("count"));
-                times.put("max",Math.max(times.getOrDefault("max",0L),exp));
-                log.info("url:"+record.getUrl()+" STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
-            }
         } catch (InterruptedException e) {
-            downLatcherror=true;
             log.error("downLatch error!");
-            for(Future<UrlRecord> future:futures) {
-                if (!future.isDone()) {
-                    String url=back.get(future);
-
-                    UrlRecord record=new UrlRecord();
-                    record.setUrl(url);
-                    log.info("record url when downLatcherror:"+record.getUrl());
-                    resolveError(record);//非正常结束
-                }
-                else{
-                    UrlRecord record = future.get();
-                    log.info("record url when downLatcherror future.get():"+record.getUrl());
-                    resolveNormal(record);//正常结束
-                }
-            }
         }
         finally {
-            executor.shutdownNow();
+            if(executor!=null){
+                executor.shutdownNow();
+            }
+            resolve(back,futures);
+            Long exp=(System.currentTimeMillis()-timeRecord.get("start"));
+            times.put("sum", times.getOrDefault("sum",0L)+exp);
+            times.put("count",times.getOrDefault("count",0L)+1L);
+            times.put("avg",times.get("sum")/times.get("count"));
+            times.put("max",Math.max(times.getOrDefault("max",0L),exp));
+            log.info("STAT current:"+exp+" avg:"+times.get("avg")+" count:"+times.get("count")+" max:"+times.get("max"));
         }
     }
 
     //正常处理
-    public SpiderResponse normal(UrlRecord record){
+    public SpiderResponse generateResponse(UrlRecord record){
         SpiderResponse response=new SpiderResponse();
-        String simhash="";
         if(record!=null&&(record.getTitle()==null||record.getContent()==null||record.getTime()==null)){
             response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
             response.setRecord(record);
@@ -164,12 +122,37 @@ public class BatchSpiderListener {
             response.setCode(SpiderCode.SPIDER_UNREACHABLE.getCode());
             response.setRecord(record);
         }
-
         return response;
     }
 
+    public void resolve(ConcurrentHashMap<Future<UrlRecord>,String> back,List<Future<UrlRecord>> futures) throws ExecutionException, InterruptedException {
+        for(Future<UrlRecord> future:futures) {
+            if (!future.isDone()) {
+                String url=back.get(future);
+
+                UrlRecord record=new UrlRecord();
+                record.setUrl(url);
+                log.info("record url when downLatcherror:"+record.getUrl());
+                resolveError(record);//非正常结束
+            }
+            else{
+                UrlRecord record = future.get();
+                log.info("record url when downLatcherror future.get():"+record.getUrl());
+                SpiderResponse response = generateResponse(record);
+                if(response.getCode().equals(SpiderCode.SPIDER_UNREACHABLE.getCode())){
+                    //遇到错误，重新发送任务
+                    resolveError(record);//非正常结束
+                }
+                else{
+                    resolveNormal(record);//正常结束
+                }
+            }
+        }
+    }
+
+    @Override
     public void resolveNormal(UrlRecord record){
-        SpiderResponse response=normal(record);
+        SpiderResponse response= generateResponse(record);
         SpiderResultMessage spiderResultMessage = SpiderResultMessage.copyUrlRecord(record);
         spiderResultMessage.setMessage(response.getMessage());
         spiderResultMessage.setCode(response.getCode());
@@ -185,6 +168,7 @@ public class BatchSpiderListener {
         }
     }
 
+    @Override
     public void resolveError(UrlRecord record){
         kafkaTemplate.send(KafkaTopicString.spidertask_slow, record.getUrl()).addCallback(new SuccessCallback() {
             @Override
@@ -200,28 +184,4 @@ public class BatchSpiderListener {
         kafkaTemplate.flush();
     }
 
-    public Callable<UrlRecord> getTask(CountDownLatch countDownLatch,String message) {
-        Callable<UrlRecord> callable = () -> {
-            log.info("spider receive:" + message);
-            String url = message;
-            UrlRecord record = new UrlRecord();
-            record.setUrl(url);
-            boolean error=false;
-            try {
-                log.info("before crawl "+url);
-                record=commonPageService.crawl(record);
-                log.info("after crawl "+url);
-            }
-            catch (Exception e){
-                log.error("commonPageService.crawl error"+url);
-                error=true;
-            }
-            finally {
-                countDownLatch.countDown();
-                log.info("return crawl:"+url);
-                return record;
-            }
-        };
-        return callable;
-    }
 }
