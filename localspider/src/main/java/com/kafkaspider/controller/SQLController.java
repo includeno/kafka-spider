@@ -37,7 +37,11 @@ public class SQLController {
     //批量读取网页的主要内容
     @PostMapping("/batch")
     public String batch(@RequestParam("list") List<String> list) throws NoSuchMethodException {
-        list = list.stream().distinct().collect(Collectors.toList());//url过滤重复url
+        //去重
+        HashSet<String> set=new HashSet<>();
+        set.addAll(list);
+        list = set.stream().distinct().collect(Collectors.toList());//url过滤重复url
+
         log.info("/submit begin filter" + gson.toJson(list));
         List<String> ans = UrlFilter.filter(list);//筛选出符合条件的URl
         log.info("/submit end filter" + gson.toJson(ans));
@@ -87,9 +91,15 @@ public class SQLController {
         System.out.println("rounds:"+rounds);
         ConcurrentHashMap<String,Long> concurrentHashMap=new ConcurrentHashMap<>();
 
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(divide, divide, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100000));
         for(int i=0;i< (int)rounds;i++){
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             concurrentHashMap.put("start",System.currentTimeMillis());
-            ThreadPoolExecutor executor = new ThreadPoolExecutor(divide, divide, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<>(3000));
+
             List<Callable<UrlRecord>> tasks=new ArrayList<>();
             List<Future<UrlRecord>> futures=new ArrayList<>();
             int count=0;
@@ -111,7 +121,6 @@ public class SQLController {
 
             try {
                 downLatch.await();
-                executor.shutdown();
             } catch (InterruptedException e) {
                 log.warn("downLatch InterruptedException");
             }

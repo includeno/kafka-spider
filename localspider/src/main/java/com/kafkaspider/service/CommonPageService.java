@@ -108,6 +108,10 @@ public class CommonPageService {
                         e.printStackTrace();
                     }
                     finally {
+                        if (chrome != null) {
+                            chrome.close();
+                            chrome.quit();
+                        }
                         break;//在找到匹配的爬虫之后跳出循环节省时间
                     }
                 }
@@ -120,6 +124,7 @@ public class CommonPageService {
             } finally {
                 if (chrome != null) {
                     chrome.close();
+                    chrome.quit();
                 }
             }
         }
