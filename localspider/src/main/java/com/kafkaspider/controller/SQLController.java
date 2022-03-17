@@ -86,18 +86,13 @@ public class SQLController {
         }
         log.info("/submit end filter" + gson.toJson(ans));
 
-        final Integer divide=8;
+        final Integer divide=16;
         double rounds=Math.ceil(urllist.size()*1.0/divide);
         System.out.println("rounds:"+rounds);
         ConcurrentHashMap<String,Long> concurrentHashMap=new ConcurrentHashMap<>();
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(divide, divide, 30, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100000));
         for(int i=0;i< (int)rounds;i++){
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             concurrentHashMap.put("start",System.currentTimeMillis());
 
             List<Callable<UrlRecord>> tasks=new ArrayList<>();
@@ -168,7 +163,7 @@ public class SQLController {
             boolean error=false;
             try {
                 log.info("before crawl "+url);
-                record=commonPageService.crawl(record);
+                record=commonPageService.crawl(record,30,3,15);
                 log.info("after crawl "+url);
             }
             catch (Exception e){

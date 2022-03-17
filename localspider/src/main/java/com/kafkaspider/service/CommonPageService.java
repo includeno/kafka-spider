@@ -33,7 +33,7 @@ public class CommonPageService {
     Gson gson;
 
     public UrlRecord crawl(UrlRecord record) {
-        return this.crawl(record,30,3,5);
+        return this.crawl(record,30,3,15);
     }
 
     //爬取网页的主要信息

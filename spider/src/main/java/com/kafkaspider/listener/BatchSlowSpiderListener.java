@@ -47,7 +47,7 @@ public class BatchSlowSpiderListener implements BatchListener{
                     "max.poll.interval.ms:180000",
                     "max.poll.records:2",
                     "auto.commit.interval.ms:100",
-                    "session.timeout.ms:120000"
+                    "session.timeout.ms:180000"
             }
     )
     public void batchSlowSpiderTask(List<String> messages) throws ExecutionException, InterruptedException {
@@ -71,7 +71,7 @@ public class BatchSlowSpiderListener implements BatchListener{
                 log.warn("skip blank");
                 continue;
             }
-            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url,60,5,15);
+            Callable<UrlRecord> task = spiderWorker.getTask(downLatch, url,80,8,25);
             tasks.add(task);
             Future<UrlRecord> future=executor.submit(task);
             futures.add(future);
@@ -124,14 +124,16 @@ public class BatchSlowSpiderListener implements BatchListener{
             if (!future.isDone()) {
                 String url=back.get(future);
 
+                //未执行完
                 UrlRecord record=new UrlRecord();
                 record.setUrl(url);
-                log.info("record url when downLatcherror:"+record.getUrl());
+                log.info("BatchSlowSpiderListener resolve1: "+record.getUrl());
                 resolveNormal(record);//在慢速模式下无论什么情况都需要传递结果
             }
             else{
+                //已执行完
                 UrlRecord record = future.get();
-                log.info("record url when downLatcherror future.get():"+record.getUrl());
+                log.info("BatchSlowSpiderListener resolve2: "+record.getUrl());
                 resolveNormal(record);//在慢速模式下无论什么情况都需要传递结果
             }
         }

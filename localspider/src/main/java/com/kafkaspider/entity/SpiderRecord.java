@@ -48,6 +48,12 @@ public class SpiderRecord {
         spiderRecord.setTime(urlRecord.getTime());
         Date date=new Date();
         spiderRecord.setUpdateTime(date);
+        if(urlRecord.getContent()==null){
+            spiderRecord.setValid(0);
+        }
+        else if(urlRecord.getContent()!=null&&urlRecord.getContent().length()<=300){
+            spiderRecord.setValid(2);
+        }
         return spiderRecord;
     }
 
@@ -62,6 +68,12 @@ public class SpiderRecord {
         Date date=new Date();
         spiderRecord.setCreateTime(date);
         spiderRecord.setUpdateTime(date);
+        if(urlRecord.getContent()==null){
+            spiderRecord.setValid(0);
+        }
+        else if(urlRecord.getContent()!=null&&urlRecord.getContent().length()<=300){
+            spiderRecord.setValid(2);
+        }
         return spiderRecord;
     }
 }

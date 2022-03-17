@@ -142,9 +142,11 @@ public class BatchSpiderListener implements BatchListener{
                 SpiderResponse response = generateResponse(record);
                 if(response.getCode().equals(SpiderCode.SPIDER_UNREACHABLE.getCode())){
                     //遇到错误，重新发送任务
+                    log.warn("BatchSpiderListener resolve2 resolveError: "+record.getUrl() +" data:"+gson.toJson(record));
                     resolveError(record);//非正常结束
                 }
                 else{
+                    log.warn("BatchSpiderListener resolve2 resolveNormal: "+record.getUrl() +" data:"+gson.toJson(record));
                     resolveNormal(record);//正常结束
                 }
             }
