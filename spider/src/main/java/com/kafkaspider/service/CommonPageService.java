@@ -87,15 +87,15 @@ public class CommonPageService {
                         record.setTime(time);
                         log.info("driver-getTime "+(System.currentTimeMillis()-concurrentHashMap.get("start")));
 
-                        Method getMainContent = c.getMethod("getMainContent", new Class[]{WebDriver.class, String.class});
-                        String content = (String) getMainContent.invoke(service, chrome, url);
-                        record.setContent(content);
-                        log.info("driver-getMainContent "+(System.currentTimeMillis()-concurrentHashMap.get("start")));
-
                         Method getView = c.getMethod("getView", new Class[]{WebDriver.class, String.class});
                         Integer view = (Integer) getView.invoke(service, chrome, url);
                         record.setView(view);
                         log.info("driver-getView "+(System.currentTimeMillis()-concurrentHashMap.get("start")));
+
+                        Method getMainContent = c.getMethod("getMainContent", new Class[]{WebDriver.class, String.class});
+                        String content = (String) getMainContent.invoke(service, chrome, url);
+                        record.setContent(content);
+                        log.info("driver-getMainContent "+(System.currentTimeMillis()-concurrentHashMap.get("start")));
 
                         log.warn("record: len+" +record.getContent().length()+" time"+record.getTime());
                     }

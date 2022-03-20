@@ -80,7 +80,7 @@ public class ZhihuzhuanlanService implements ContentService, MatchService, Clean
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        WebElement content = chrome.findElement(By.tagName("article"));
+        WebElement content = chrome.findElement(By.className("css-1yuhvjn"));
         String ans = content.getText();
         if (ans != null && !ans.equals("")) {
             log.info("getMainContent completed:" + ans.length());
