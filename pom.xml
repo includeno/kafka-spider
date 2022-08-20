@@ -85,15 +85,16 @@
             </dependency>
 
             <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>29.0-jre</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.5.12</version>
+            </dependency>
+
+            <!--https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp/4.9.1-->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>4.9.1</version>
             </dependency>
 
             <dependency>
@@ -109,6 +110,26 @@
                 <optional>true</optional>
             </dependency>
 
+            <!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>5.5.9</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>30.1-jre</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.reflections</groupId>
+                <artifactId>reflections</artifactId>
+                <version>0.10.2</version>
+            </dependency>
+
 
             <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
             <dependency>
@@ -116,7 +137,6 @@
                 <artifactId>springfox-swagger2</artifactId>
                 <version>2.9.2</version>
             </dependency>
-
 
             <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
             <dependency>
@@ -130,6 +150,23 @@
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>5.6.3</version>
                 <scope>test</scope>
+            </dependency>
+
+
+
+            <!-- 算法 -->
+            <!-- https://mvnrepository.com/artifact/org.ansj/ansj_seg -->
+            <dependency>
+                <groupId>org.ansj</groupId>
+                <artifactId>ansj_seg</artifactId>
+                <version>5.1.6</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.hankcs/hanlp -->
+            <dependency>
+                <groupId>com.hankcs</groupId>
+                <artifactId>hanlp</artifactId>
+                <version>portable-1.8.2</version>
             </dependency>
 
         </dependencies>

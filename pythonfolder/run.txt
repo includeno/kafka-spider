@@ -1,0 +1,5 @@
+/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home/bin/java -Xmx3g -jar /Users/includeno/Dataposition/github/kafka-spider/localspider/target/localspider-1.0-SNAPSHOT.jar
+
+/Library/Java/JavaVirtualMachines/zulu-11.jdk/Contents/Home/bin/java -XX:+PrintFlagsFinal -version
+
+2022-03-13 21:42:36.993
